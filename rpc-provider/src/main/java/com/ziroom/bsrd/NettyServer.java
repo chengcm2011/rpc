@@ -1,21 +1,18 @@
 package com.ziroom.bsrd;
 
 
+import com.ziroom.bsrd.log.ApplicationLogger;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
- * netty rpc server
- *
- * @author xuxueli 2015-10-29 18:17:14
+ * cheng
+ * 2018-02-16
  */
 public class NettyServer extends IServer {
-    private static final Logger logger = LoggerFactory.getLogger(NettyServer.class);
 
     private Thread thread;
 
@@ -44,10 +41,10 @@ public class NettyServer extends IServer {
                             .option(ChannelOption.SO_REUSEADDR, true)
                             .childOption(ChannelOption.SO_KEEPALIVE, true);
                     ChannelFuture future = bootstrap.bind(port).sync();
-                    logger.info(">>>>>>>>>>> xxl-rpc server start success, netcon={}, port={}", NettyServer.class.getName(), port);
+                    ApplicationLogger.info("rpc com.ziroom.bsrd.server start success, com.ziroom.bsrd.server={}, port={}", NettyServer.class.getName(), port);
                     Channel serviceChannel = future.channel().closeFuture().sync().channel();
                 } catch (InterruptedException e) {
-                    logger.error("", e);
+                    ApplicationLogger.error("", e);
                 } finally {
                     workerGroup.shutdownGracefully();
                     bossGroup.shutdownGracefully();
@@ -62,7 +59,7 @@ public class NettyServer extends IServer {
     @Override
     public void destroy() throws Exception {
         thread.interrupt();
-        logger.info(">>>>>>>>>>> xxl-rpc server destroy success, netcon={}", NettyServer.class.getName());
+        ApplicationLogger.info("rpc com.ziroom.bsrd.server destroy success, com.ziroom.bsrd.server={}", NettyServer.class.getName());
     }
 
 }
