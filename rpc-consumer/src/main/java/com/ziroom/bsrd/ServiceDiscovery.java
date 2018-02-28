@@ -1,23 +1,26 @@
 package com.ziroom.bsrd;
 
+import com.ziroom.bsrd.log.ApplicationLogger;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
+import org.apache.curator.framework.state.ConnectionState;
+import org.apache.curator.framework.state.ConnectionStateListener;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * ∑˛ŒÒ∑¢œ÷
+ * ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ
  */
 public class ServiceDiscovery {
 
@@ -27,7 +30,6 @@ public class ServiceDiscovery {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ServiceDiscovery.class);
 
-    private CountDownLatch latch = new CountDownLatch(1);
 
     private volatile List<String> dataList = new ArrayList<>();
 
@@ -36,9 +38,6 @@ public class ServiceDiscovery {
     public ServiceDiscovery(String registryAddress) {
         this.registryAddress = registryAddress;
         curatorFramework = connectServer();
-        if (curatorFramework != null) {
-            watchNode(curatorFramework);
-        }
     }
 
     public String discover() {
@@ -67,57 +66,46 @@ public class ServiceDiscovery {
                         .namespace(namespace)
                         .build();
         client.start();
+        client.getConnectionStateListenable().addListener(new ConnectionStateListener() {
+            @Override
+            public void stateChanged(CuratorFramework client, ConnectionState newState) {
+                if (newState.equals(ConnectionState.CONNECTED)) {
+                    //Ëé∑ÂèñÊâÄÊúâÁöÑÊúçÂä°
+                    Map<String, List<String>> serviceNodes = new HashMap<>();
+                    try {
+                        List<String> serviceList = client.getChildren().forPath("/");
+
+                        for (String service : serviceList) {
+                            List<String> nodeList = client.getChildren().forPath("/" + service);
+                            ApplicationLogger.info("node:" + nodeList.toString());
+                            serviceNodes.put(service, nodeList);
+                        }
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                    ApplicationLogger.info("connect service ");
+                    ConnectManage.getInstance().initServices(client, serviceNodes);
+                }
+            }
+        });
         return client;
     }
 
     private void watchNode(final CuratorFramework curatorFramework) {
         try {
-//            List<String> nodeList = curatorFramework.getChildren().watched().forPath("/sdds");
-
-            PathChildrenCache childrenCache = new PathChildrenCache(curatorFramework, "/rpc", true);
-
-            PathChildrenCacheListener childrenCacheListener = new PathChildrenCacheListener() {
+            String parentPath = "/rpc";
+            PathChildrenCache pathChildrenCache = new PathChildrenCache(curatorFramework, parentPath, true);
+            pathChildrenCache.start(PathChildrenCache.StartMode.POST_INITIALIZED_EVENT);
+            pathChildrenCache.getListenable().addListener(new PathChildrenCacheListener() {
                 @Override
                 public void childEvent(CuratorFramework client, PathChildrenCacheEvent event) throws Exception {
-                    System.out.println("ø™ ºΩ¯–– ¬º˛∑÷Œˆ:-----");
-                    ChildData data = event.getData();
-                    switch (event.getType()) {
-                        case CHILD_ADDED:
-                            System.out.println("CHILD_ADDED : " + data.getPath() + "   ˝æ›:" + data.getData());
-                            break;
-                        case CHILD_REMOVED:
-                            System.out.println("CHILD_REMOVED : " + data.getPath() + "   ˝æ›:" + data.getData());
-                            break;
-                        case CHILD_UPDATED:
-                            System.out.println("CHILD_UPDATED : " + data.getPath() + "   ˝æ›:" + data.getData());
-                            break;
-                        default:
-                            break;
-                    }
+                    System.out.println("‰∫ã‰ª∂Á±ªÂûãÔºö" + event.getType() + "ÔºõÊìç‰ΩúËäÇÁÇπÔºö" + event.getData().getPath());
                 }
-            };
-            childrenCache.getListenable().addListener(childrenCacheListener);
-            System.out.println("Register zk watcher successfully!");
-            childrenCache.start(PathChildrenCache.StartMode.POST_INITIALIZED_EVENT);
+            });
 
-
-//            List<String> dataList = new ArrayList<>();
-//            for (String node : nodeList) {
-//                byte[] bytes = zk.getData(Constant.ZK_REGISTRY_PATH + "/" + node, false, null);
-//                dataList.add(new String(bytes));
-//            }
-//            LOGGER.debug("node data: {}", dataList);
-//            this.dataList = dataList;
-
-            LOGGER.debug("Service discovery triggered updating connected com.ziroom.bsrd.server node.");
-            updateConnectedServer();
+//            updateConnectedServer();
         } catch (Exception e) {
             LOGGER.error("", e);
         }
     }
-
-    private void updateConnectedServer() {
-        ConnectManage.getInstance().updateConnectedServer(this.dataList);
-    }
-
 }
