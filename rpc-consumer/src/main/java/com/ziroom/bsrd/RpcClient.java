@@ -1,5 +1,7 @@
 package com.ziroom.bsrd;
 
+import org.springframework.beans.factory.InitializingBean;
+
 import java.lang.reflect.Proxy;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -11,13 +13,11 @@ import java.util.concurrent.TimeUnit;
  * @author chengys4
  *         2018-02-27 17:50
  **/
-public class RpcClient {
+public class RpcClient implements InitializingBean {
 
     private static ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(16, 16, 600L, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(65536));
 
     private ServiceDiscovery serviceDiscovery;
-
-    private String servicesAddress;
 
     public RpcClient(ServiceDiscovery serviceDiscovery) {
         this.serviceDiscovery = serviceDiscovery;
@@ -45,23 +45,20 @@ public class RpcClient {
         ConnectManage.getInstance().stop();
     }
 
-    public void init() {
-        serviceDiscovery.discover(servicesAddress);
-    }
-
-    public String getServicesAddress() {
-        return servicesAddress;
-    }
-
-    public void setServicesAddress(String servicesAddress) {
-        this.servicesAddress = servicesAddress;
-    }
-
     public ServiceDiscovery getServiceDiscovery() {
         return serviceDiscovery;
     }
 
     public void setServiceDiscovery(ServiceDiscovery serviceDiscovery) {
         this.serviceDiscovery = serviceDiscovery;
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        serviceDiscovery.discover();
+    }
+
+    public void init() throws Exception {
+        afterPropertiesSet();
     }
 }

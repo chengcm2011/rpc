@@ -3,28 +3,28 @@ package com.ziroom.bsrd;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.RetryNTimes;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  *
  */
 public class ServiceDiscovery {
 
+    private String namespace;
 
-    public static String namespace = "rpc";
-
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(ServiceDiscovery.class);
+    private String registryAddress;
 
     private CuratorFramework curatorFramework;
-
 
     public ServiceDiscovery() {
 
     }
 
-    public String discover(String registryAddress) {
+    public ServiceDiscovery(String namespace, String registryAddress) {
+        this.namespace = namespace;
+        this.registryAddress = registryAddress;
+    }
+
+    public String discover() {
 
         curatorFramework = initServiceNode(registryAddress);
 
@@ -59,6 +59,22 @@ public class ServiceDiscovery {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public String getRegistryAddress() {
+        return registryAddress;
+    }
+
+    public void setRegistryAddress(String registryAddress) {
+        this.registryAddress = registryAddress;
+    }
+
+    public String getNamespace() {
+        return namespace;
+    }
+
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
     }
 
     public void stop() {

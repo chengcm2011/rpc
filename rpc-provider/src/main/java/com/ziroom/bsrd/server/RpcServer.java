@@ -55,10 +55,6 @@ public class RpcServer implements ApplicationContextAware, InitializingBean, Dis
             Class<?>[] parameterTypes = request.getParameterTypes();
             Object[] parameters = request.getParameters();
 
-            /*Method method = serviceClass.getMethod(methodName, parameterTypes);
-            method.setAccessible(true);
-            return method.invoke(serviceBean, parameters);*/
-
             FastClass serviceFastClass = FastClass.create(serviceClass);
             FastMethod serviceFastMethod = serviceFastClass.getMethod(methodName, parameterTypes);
 

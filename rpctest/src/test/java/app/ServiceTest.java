@@ -31,14 +31,12 @@ public class ServiceTest {
     private RpcClient rpcClient;
 
     @Before
-    public void init() {
-        if (rpcClient != null) {
-            rpcClient.init();
-        }
+    public void init() throws Exception {
+        Thread.sleep(3 * 1000L);
     }
 
 
-    //    @Test
+    @Test
     public void helloTest1() {
         IHelloService helloService = rpcClient.create(IHelloService.class);
         String result = helloService.hello("World");
@@ -47,13 +45,13 @@ public class ServiceTest {
 
     @Test
     public void helloTest2() {
-//        IHelloService helloService = rpcClient.create(IHelloService.class);
-//        Person person = new Person("Yong", "Huang");
-//        String result = helloService.hello(person);
-//        Assert.assertEquals("Hello! Yong Huang", result);
+        IHelloService helloService = rpcClient.create(IHelloService.class);
+        Person person = new Person("Yong", "Huang");
+        String result = helloService.hello(person);
+        Assert.assertEquals("Hello! Yong Huang", result);
     }
 
-    //    @Test
+    @Test
     public void helloPersonTest() {
         IPersonService personService = rpcClient.create(IPersonService.class);
         int num = 5;
@@ -69,14 +67,14 @@ public class ServiceTest {
         }
     }
 
-    //    @Test
+    @Test
     public void helloFutureTest1() throws ExecutionException, InterruptedException {
         IAsyncObjectProxy helloService = rpcClient.createAsync(IHelloService.class);
         RPCFuture result = helloService.call("hello", "World");
         Assert.assertEquals("Hello! World", result.get());
     }
 
-    //    @Test
+    @Test
     public void helloFutureTest2() throws ExecutionException, InterruptedException {
         IAsyncObjectProxy helloService = rpcClient.createAsync(IHelloService.class);
         Person person = new Person("Yong", "Huang");
@@ -84,7 +82,7 @@ public class ServiceTest {
         Assert.assertEquals("Hello! Yong Huang", result.get());
     }
 
-    //    @Test
+    @Test
     public void helloPersonFutureTest1() throws ExecutionException, InterruptedException {
         IAsyncObjectProxy helloPersonService = rpcClient.createAsync(IPersonService.class);
         int num = 5;
