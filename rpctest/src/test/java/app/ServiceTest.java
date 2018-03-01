@@ -4,11 +4,12 @@ package app;
 import com.ziroom.bsrd.IAsyncObjectProxy;
 import com.ziroom.bsrd.RPCFuture;
 import com.ziroom.bsrd.RpcClient;
-import com.ziroom.bsrd.client.HelloService;
+import com.ziroom.bsrd.client.IHelloService;
+import com.ziroom.bsrd.client.IPersonService;
 import com.ziroom.bsrd.client.Person;
-import com.ziroom.bsrd.client.PersonService;
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,16 +30,24 @@ public class ServiceTest {
     @Autowired
     private RpcClient rpcClient;
 
+    @Before
+    public void init() {
+        if (rpcClient != null) {
+            rpcClient.init();
+        }
+    }
+
+
     //    @Test
     public void helloTest1() {
-        HelloService helloService = rpcClient.create(HelloService.class);
+        IHelloService helloService = rpcClient.create(IHelloService.class);
         String result = helloService.hello("World");
         Assert.assertEquals("Hello! World", result);
     }
 
     @Test
     public void helloTest2() {
-//        HelloService helloService = rpcClient.create(HelloService.class);
+//        IHelloService helloService = rpcClient.create(IHelloService.class);
 //        Person person = new Person("Yong", "Huang");
 //        String result = helloService.hello(person);
 //        Assert.assertEquals("Hello! Yong Huang", result);
@@ -46,7 +55,7 @@ public class ServiceTest {
 
     //    @Test
     public void helloPersonTest() {
-        PersonService personService = rpcClient.create(PersonService.class);
+        IPersonService personService = rpcClient.create(IPersonService.class);
         int num = 5;
         List<Person> persons = personService.GetTestPerson("xiaoming", num);
         List<Person> expectedPersons = new ArrayList<>();
@@ -62,14 +71,14 @@ public class ServiceTest {
 
     //    @Test
     public void helloFutureTest1() throws ExecutionException, InterruptedException {
-        IAsyncObjectProxy helloService = rpcClient.createAsync(HelloService.class);
+        IAsyncObjectProxy helloService = rpcClient.createAsync(IHelloService.class);
         RPCFuture result = helloService.call("hello", "World");
         Assert.assertEquals("Hello! World", result.get());
     }
 
     //    @Test
     public void helloFutureTest2() throws ExecutionException, InterruptedException {
-        IAsyncObjectProxy helloService = rpcClient.createAsync(HelloService.class);
+        IAsyncObjectProxy helloService = rpcClient.createAsync(IHelloService.class);
         Person person = new Person("Yong", "Huang");
         RPCFuture result = helloService.call("hello", person);
         Assert.assertEquals("Hello! Yong Huang", result.get());
@@ -77,7 +86,7 @@ public class ServiceTest {
 
     //    @Test
     public void helloPersonFutureTest1() throws ExecutionException, InterruptedException {
-        IAsyncObjectProxy helloPersonService = rpcClient.createAsync(PersonService.class);
+        IAsyncObjectProxy helloPersonService = rpcClient.createAsync(IPersonService.class);
         int num = 5;
         RPCFuture result = helloPersonService.call("GetTestPerson", "xiaoming", num);
         List<Person> persons = (List<Person>) result.get();

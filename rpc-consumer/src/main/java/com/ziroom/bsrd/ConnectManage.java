@@ -12,16 +12,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * RPC Connect Manage of ZooKeeper
- * Created by luxiaoxun on 2016-03-16.
+ * RPC Connect Manage
  */
 public class ConnectManage {
 
@@ -30,11 +33,7 @@ public class ConnectManage {
 
     EventLoopGroup eventLoopGroup = new NioEventLoopGroup(4);
     private static ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(16, 16, 600L, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(65536));
-
-    private CopyOnWriteArrayList<RpcClientHandler> connectedHandlers = new CopyOnWriteArrayList<>();
-    //    private Map<InetSocketAddress, RpcClientHandler> connectedServerNodes = new ConcurrentHashMap<>();
     private Map<String, List<RpcClientHandler>> connectedServerNodes = new ConcurrentHashMap<>();
-    //private Map<InetSocketAddress, Channel> connectedServerNodes = new ConcurrentHashMap<>();
 
     private ReentrantLock lock = new ReentrantLock();
     private Condition connected = lock.newCondition();
@@ -72,86 +71,12 @@ public class ConnectManage {
 
     }
 
-//    public void updateConnectedServer(List<String> allServerAddress) {
-//        if (allServerAddress != null) {
-//            if (allServerAddress.size() > 0) {  // Get available com.ziroom.bsrd.server node
-//                //update local serverNodes cache
-//                HashSet<InetSocketAddress> newAllServerNodeSet = new HashSet<InetSocketAddress>();
-//                for (int i = 0; i < allServerAddress.size(); ++i) {
-//                    String[] array = allServerAddress.get(i).split(":");
-//                    if (array.length == 2) { // Should check IP and port
-//                        String host = array[0];
-//                        int port = Integer.parseInt(array[1]);
-//                        final InetSocketAddress remotePeer = new InetSocketAddress(host, port);
-//                        newAllServerNodeSet.add(remotePeer);
-//                    }
-//                }
-//
-//                // Add new com.ziroom.bsrd.server node
-//                for (final InetSocketAddress serverNodeAddress : newAllServerNodeSet) {
-//                    if (!connectedServerNodes.keySet().contains(serverNodeAddress)) {
-//                        connectServerNode(serverNodeAddress);
-//                    }
-//                }
-//
-//                // Close and remove invalid com.ziroom.bsrd.server nodes
-//                for (int i = 0; i < connectedHandlers.size(); ++i) {
-//                    RpcClientHandler connectedServerHandler = connectedHandlers.get(i);
-//                    SocketAddress remotePeer = connectedServerHandler.getRemotePeer();
-//                    if (!newAllServerNodeSet.contains(remotePeer)) {
-//                        LOGGER.info("Remove invalid com.ziroom.bsrd.server node " + remotePeer);
-//                        RpcClientHandler handler = connectedServerNodes.get(remotePeer);
-//                        handler.close();
-//                        connectedServerNodes.remove(remotePeer);
-//                        connectedHandlers.remove(connectedServerHandler);
-//                    }
-//                }
-//
-//            } else { // No available com.ziroom.bsrd.server node ( All com.ziroom.bsrd.server nodes are down )
-//                LOGGER.error("No available com.ziroom.bsrd.server node. All com.ziroom.bsrd.server nodes are down !!!");
-//                for (final RpcClientHandler connectedServerHandler : connectedHandlers) {
-//                    SocketAddress remotePeer = connectedServerHandler.getRemotePeer();
-//                    RpcClientHandler handler = connectedServerNodes.get(remotePeer);
-//                    handler.close();
-//                    connectedServerNodes.remove(connectedServerHandler);
-//                }
-//                connectedHandlers.clear();
-//            }
-//        }
-//    }
-
-//    public void reconnect(final RpcClientHandler handler, final SocketAddress remotePeer) {
-//        if (handler != null) {
-//            connectedHandlers.remove(handler);
-//            connectedServerNodes.remove(handler.getRemotePeer());
-//        }
-//        connectServerNode((InetSocketAddress) remotePeer);
-//    }
-
-//    private void connectServerNode(final InetSocketAddress remotePeer) {
-//        threadPoolExecutor.submit(new Runnable() {
-//            @Override
-//            public void run() {
-//                Bootstrap b = new Bootstrap();
-//                b.group(eventLoopGroup)
-//                        .channel(NioSocketChannel.class)
-//                        .handler(new RpcClientInitializer());
-//
-//                ChannelFuture channelFuture = b.connect(remotePeer);
-//                channelFuture.addListener(new ChannelFutureListener() {
-//                    @Override
-//                    public void operationComplete(final ChannelFuture channelFuture) throws Exception {
-//                        if (channelFuture.isSuccess()) {
-//                            LOGGER.debug("Successfully connect to remote com.ziroom.bsrd.server. remote peer = " + remotePeer);
-//                            RpcClientHandler handler = channelFuture.channel().pipeline().get(RpcClientHandler.class);
-//                            addHandler(serviceName, handler);
-//                        }
-//                    }
-//                });
-//            }
-//        });
-//    }
-
+    /**
+     * 连接服务器
+     *
+     * @param serviceName
+     * @param nodeList
+     */
     private void connectServerNode(String serviceName, final List<String> nodeList) {
 
         for (String nodeinfo : nodeList) {
@@ -169,7 +94,7 @@ public class ConnectManage {
                         @Override
                         public void operationComplete(final ChannelFuture channelFuture) throws Exception {
                             if (channelFuture.isSuccess()) {
-                                LOGGER.debug("Successfully connect to remote com.ziroom.bsrd.server. remote peer = " + remotePeer);
+                                LOGGER.info("Successfully connect to remote com.ziroom.bsrd.server. remote peer = " + remotePeer);
                                 RpcClientHandler handler = channelFuture.channel().pipeline().get(RpcClientHandler.class);
                                 addHandler(serviceName, handler);
                             }
@@ -183,9 +108,15 @@ public class ConnectManage {
     }
 
 
+    /**
+     * 解析服务器地址
+     *
+     * @param node
+     * @return
+     */
     private InetSocketAddress parseNode(String node) {
         String[] array = node.split(":");
-        if (array.length == 2) { // Should check IP and port
+        if (array.length == 2) {
             String host = array[0];
             int port = Integer.parseInt(array[1]);
             final InetSocketAddress remotePeer = new InetSocketAddress(host, port);
@@ -195,12 +126,19 @@ public class ConnectManage {
         return null;
     }
 
+    /**
+     * 添加
+     *
+     * @param serviceName
+     * @param handler
+     */
     private void addHandler(String serviceName, RpcClientHandler handler) {
-        connectedHandlers.add(handler);
         List<RpcClientHandler> rpcClientHandlerList = connectedServerNodes.get(serviceName);
+        if (rpcClientHandlerList == null) {
+            rpcClientHandlerList = new ArrayList<>();
+        }
         rpcClientHandlerList.add(handler);
         connectedServerNodes.put(serviceName, rpcClientHandlerList);
-        signalAvailableHandler();
 
     }
 
@@ -222,14 +160,19 @@ public class ConnectManage {
         }
     }
 
-    public RpcClientHandler chooseHandler() {
-        CopyOnWriteArrayList<RpcClientHandler> handlers = (CopyOnWriteArrayList<RpcClientHandler>) this.connectedHandlers.clone();
+    /**
+     * 选择服务器
+     *
+     * @param serviceName
+     * @return
+     */
+    public RpcClientHandler chooseHandler(String serviceName) {
+        List<RpcClientHandler> handlers = connectedServerNodes.get(serviceName);
         int size = handlers.size();
         while (isRuning && size <= 0) {
             try {
                 boolean available = waitingForHandler();
                 if (available) {
-                    handlers = (CopyOnWriteArrayList<RpcClientHandler>) this.connectedHandlers.clone();
                     size = handlers.size();
                 }
             } catch (InterruptedException e) {
@@ -238,16 +181,20 @@ public class ConnectManage {
             }
         }
         int index = (roundRobin.getAndAdd(1) + size) % size;
-        return handlers.get(index);
+        RpcClientHandler selectRpcClientHandler = handlers.get(index);
+        LOGGER.info("service:{} select {}", serviceName, selectRpcClientHandler.getRemotePeer());
+        return selectRpcClientHandler;
     }
 
     public void stop() {
         isRuning = false;
-        for (int i = 0; i < connectedHandlers.size(); ++i) {
-            RpcClientHandler connectedServerHandler = connectedHandlers.get(i);
-            connectedServerHandler.close();
+        for (Map.Entry<String, List<RpcClientHandler>> listEntry : connectedServerNodes.entrySet()) {
+            List<RpcClientHandler> rpcClientHandlerList = listEntry.getValue();
+            for (int i = 0; i < rpcClientHandlerList.size(); ++i) {
+                RpcClientHandler connectedServerHandler = rpcClientHandlerList.get(i);
+                connectedServerHandler.close();
+            }
         }
-        signalAvailableHandler();
         threadPoolExecutor.shutdown();
         eventLoopGroup.shutdownGracefully();
     }

@@ -3,7 +3,7 @@ package app;
 
 import com.ziroom.bsrd.RpcClient;
 import com.ziroom.bsrd.ServiceDiscovery;
-import com.ziroom.bsrd.client.HelloService;
+import com.ziroom.bsrd.client.IHelloService;
 
 /**
  * Created by luxiaoxun on 2016-03-11.
@@ -12,7 +12,7 @@ public class Benchmark {
 
     public static void main(String[] args) throws InterruptedException {
 
-        ServiceDiscovery serviceDiscovery = new ServiceDiscovery("127.0.0.1:2181");
+        ServiceDiscovery serviceDiscovery = new ServiceDiscovery();
         final RpcClient rpcClient = new RpcClient(serviceDiscovery);
 
         int threadNum = 10;
@@ -26,7 +26,7 @@ public class Benchmark {
                 @Override
                 public void run() {
                     for (int i = 0; i < requestNum; i++) {
-                        final HelloService syncClient = rpcClient.create(HelloService.class);
+                        final IHelloService syncClient = rpcClient.create(IHelloService.class);
                         String result = syncClient.hello(Integer.toString(i));
                         if (!result.equals("Hello! " + i))
                             System.out.print("error = " + result);

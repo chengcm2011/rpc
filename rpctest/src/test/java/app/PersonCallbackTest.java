@@ -1,8 +1,8 @@
 package app;
 
 import com.ziroom.bsrd.*;
+import com.ziroom.bsrd.client.IPersonService;
 import com.ziroom.bsrd.client.Person;
-import com.ziroom.bsrd.client.PersonService;
 
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -12,12 +12,12 @@ import java.util.concurrent.CountDownLatch;
  */
 public class PersonCallbackTest {
     public static void main(String[] args) {
-        ServiceDiscovery serviceDiscovery = new ServiceDiscovery("127.0.0.1:2181");
+        ServiceDiscovery serviceDiscovery = new ServiceDiscovery();
         final RpcClient rpcClient = new RpcClient(serviceDiscovery);
         final CountDownLatch countDownLatch = new CountDownLatch(1);
 
         try {
-            IAsyncObjectProxy client = rpcClient.createAsync(PersonService.class);
+            IAsyncObjectProxy client = rpcClient.createAsync(IPersonService.class);
             int num = 5;
             RPCFuture helloPersonFuture = client.call("GetTestPerson", "xiaoming", num);
             helloPersonFuture.addCallback(new AsyncRPCCallback() {

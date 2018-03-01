@@ -5,7 +5,7 @@ import com.ziroom.bsrd.IAsyncObjectProxy;
 import com.ziroom.bsrd.RPCFuture;
 import com.ziroom.bsrd.RpcClient;
 import com.ziroom.bsrd.ServiceDiscovery;
-import com.ziroom.bsrd.client.HelloService;
+import com.ziroom.bsrd.client.IHelloService;
 
 import java.util.concurrent.TimeUnit;
 
@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class BenchmarkAsync {
     public static void main(String[] args) throws InterruptedException {
-        ServiceDiscovery serviceDiscovery = new ServiceDiscovery("127.0.0.1:2181");
+        ServiceDiscovery serviceDiscovery = new ServiceDiscovery();
         final RpcClient rpcClient = new RpcClient(serviceDiscovery);
 
         int threadNum = 10;
@@ -29,7 +29,7 @@ public class BenchmarkAsync {
                 public void run() {
                     for (int i = 0; i < requestNum; i++) {
                         try {
-                            IAsyncObjectProxy client = rpcClient.createAsync(HelloService.class);
+                            IAsyncObjectProxy client = rpcClient.createAsync(IHelloService.class);
                             RPCFuture helloFuture = client.call("hello", Integer.toString(i));
                             String result = (String) helloFuture.get(3000, TimeUnit.MILLISECONDS);
                             //System.out.println(result);

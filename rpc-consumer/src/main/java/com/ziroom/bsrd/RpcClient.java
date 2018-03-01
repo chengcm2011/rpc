@@ -17,6 +17,8 @@ public class RpcClient {
 
     private ServiceDiscovery serviceDiscovery;
 
+    private String servicesAddress;
+
     public RpcClient(ServiceDiscovery serviceDiscovery) {
         this.serviceDiscovery = serviceDiscovery;
     }
@@ -39,7 +41,27 @@ public class RpcClient {
 
     public void stop() {
         threadPoolExecutor.shutdown();
+        serviceDiscovery.stop();
         ConnectManage.getInstance().stop();
     }
 
+    public void init() {
+        serviceDiscovery.discover(servicesAddress);
+    }
+
+    public String getServicesAddress() {
+        return servicesAddress;
+    }
+
+    public void setServicesAddress(String servicesAddress) {
+        this.servicesAddress = servicesAddress;
+    }
+
+    public ServiceDiscovery getServiceDiscovery() {
+        return serviceDiscovery;
+    }
+
+    public void setServiceDiscovery(ServiceDiscovery serviceDiscovery) {
+        this.serviceDiscovery = serviceDiscovery;
+    }
 }

@@ -46,7 +46,7 @@ public class ServiceProxy<T> implements InvocationHandler, IAsyncObjectProxy {
 //            LOGGER.debug(args[i].toString());
 //        }
 
-        RpcClientHandler handler = ConnectManage.getInstance().chooseHandler();
+        RpcClientHandler handler = ConnectManage.getInstance().chooseHandler(clazz.getName());
         RPCFuture rpcFuture = handler.sendRequest(request);
         return rpcFuture.get();
 
@@ -54,7 +54,7 @@ public class ServiceProxy<T> implements InvocationHandler, IAsyncObjectProxy {
 
     @Override
     public RPCFuture call(String funcName, Object... args) {
-        RpcClientHandler handler = ConnectManage.getInstance().chooseHandler();
+        RpcClientHandler handler = ConnectManage.getInstance().chooseHandler(this.clazz.getName());
         RpcRequest request = createRequest(this.clazz.getName(), funcName, args);
         RPCFuture rpcFuture = handler.sendRequest(request);
         return rpcFuture;

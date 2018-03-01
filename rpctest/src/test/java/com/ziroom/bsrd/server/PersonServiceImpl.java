@@ -2,8 +2,8 @@ package com.ziroom.bsrd.server;
 
 
 import com.ziroom.bsrd.annotation.RpcService;
+import com.ziroom.bsrd.client.IPersonService;
 import com.ziroom.bsrd.client.Person;
-import com.ziroom.bsrd.client.PersonService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,8 +11,8 @@ import java.util.List;
 /**
  * Created by luxiaoxun on 2016-03-10.
  */
-@RpcService(PersonService.class)
-public class PersonServiceImpl implements PersonService {
+@RpcService(IPersonService.class)
+public class PersonServiceImpl implements IPersonService {
 
     @Override
     public List<Person> GetTestPerson(String name, int num) {

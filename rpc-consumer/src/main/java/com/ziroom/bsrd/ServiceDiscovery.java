@@ -1,7 +1,5 @@
 package com.ziroom.bsrd;
 
-import com.ziroom.bsrd.log.ApplicationLogger;
-import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
@@ -9,67 +7,62 @@ import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
 import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.framework.state.ConnectionStateListener;
-import org.apache.curator.retry.ExponentialBackoffRetry;
+import org.apache.curator.retry.RetryNTimes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * ������
+ *
  */
 public class ServiceDiscovery {
 
-    public static String registryAddress = "10.16.37.112:3181";
+
     public static String namespace = "rpc";
 
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ServiceDiscovery.class);
 
-
-    private volatile List<String> dataList = new ArrayList<>();
-
     private CuratorFramework curatorFramework;
 
-    public ServiceDiscovery(String registryAddress) {
-        this.registryAddress = registryAddress;
-        curatorFramework = connectServer();
+
+    public ServiceDiscovery() {
+//        initServiceNode("10.16.37.112:3181");
     }
 
-    public String discover() {
-        String data = null;
-        int size = dataList.size();
-        if (size > 0) {
-            if (size == 1) {
-                data = dataList.get(0);
-                LOGGER.debug("using only data: {}", data);
-            } else {
-                data = dataList.get(ThreadLocalRandom.current().nextInt(size));
-                LOGGER.debug("using random data: {}", data);
-            }
-        }
-        return data;
+    public String discover(String registryAddress) {
+
+        curatorFramework = initServiceNode(registryAddress);
+
+
+        return "ss";
     }
 
-    private CuratorFramework connectServer() {
-        RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
-        CuratorFramework client =
-                CuratorFrameworkFactory.builder()
-                        .connectString(registryAddress)
-                        .sessionTimeoutMs(5000)
-                        .connectionTimeoutMs(5000)
-                        .retryPolicy(retryPolicy)
-                        .namespace(namespace)
-                        .build();
+    private CuratorFramework initServiceNode(String registryAddress) {
+
+
+        CuratorFramework client = CuratorFrameworkFactory
+
+                .builder()
+
+                .connectString(registryAddress)
+
+                .retryPolicy(new RetryNTimes(2000, 20000)).namespace(namespace)
+
+                .build();
+
         client.start();
+
         client.getConnectionStateListenable().addListener(new ConnectionStateListener() {
             @Override
             public void stateChanged(CuratorFramework client, ConnectionState newState) {
+
+                System.out.println(newState);
                 if (newState.equals(ConnectionState.CONNECTED)) {
+                    LOGGER.info("zk connect success");
                     //获取所有的服务
                     Map<String, List<String>> serviceNodes = new HashMap<>();
                     try {
@@ -77,35 +70,43 @@ public class ServiceDiscovery {
 
                         for (String service : serviceList) {
                             List<String> nodeList = client.getChildren().forPath("/" + service);
-                            ApplicationLogger.info("node:" + nodeList.toString());
+                            LOGGER.info("node:" + nodeList.toString());
                             serviceNodes.put(service, nodeList);
                         }
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
-                    ApplicationLogger.info("connect service ");
+                    LOGGER.info("connect service begin");
                     ConnectManage.getInstance().initServices(client, serviceNodes);
+                    LOGGER.info("connect service end");
                 }
             }
         });
+//        watchNode(client);
         return client;
     }
 
     private void watchNode(final CuratorFramework curatorFramework) {
         try {
-            String parentPath = "/rpc";
+            String parentPath = "/";
             PathChildrenCache pathChildrenCache = new PathChildrenCache(curatorFramework, parentPath, true);
             pathChildrenCache.start(PathChildrenCache.StartMode.POST_INITIALIZED_EVENT);
             pathChildrenCache.getListenable().addListener(new PathChildrenCacheListener() {
                 @Override
                 public void childEvent(CuratorFramework client, PathChildrenCacheEvent event) throws Exception {
-                    System.out.println("事件类型：" + event.getType() + "；操作节点：" + event.getData().getPath());
+                    if (event != null) {
+                        LOGGER.info("eventType:" + event.getType() + "-eventNode:" + event.getData().getPath());
+                    } else {
+                        LOGGER.error(" event is null");
+                    }
                 }
             });
-
-//            updateConnectedServer();
         } catch (Exception e) {
             LOGGER.error("", e);
         }
+    }
+
+    public void stop() {
+        curatorFramework.close();
     }
 }

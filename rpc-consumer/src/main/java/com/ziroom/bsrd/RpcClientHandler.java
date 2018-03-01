@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 
 /**
- * Created by luxiaoxun on 2016-03-14.
+ * rpc 请求客户端
  */
 public class RpcClientHandler extends SimpleChannelInboundHandler<RpcResponse> {
     private static final Logger LOGGER = LoggerFactory.getLogger(RpcClientHandler.class);

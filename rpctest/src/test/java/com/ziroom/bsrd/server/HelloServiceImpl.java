@@ -2,11 +2,11 @@ package com.ziroom.bsrd.server;
 
 
 import com.ziroom.bsrd.annotation.RpcService;
-import com.ziroom.bsrd.client.HelloService;
+import com.ziroom.bsrd.client.IHelloService;
 import com.ziroom.bsrd.client.Person;
 
-@RpcService(HelloService.class)
-public class HelloServiceImpl implements HelloService {
+@RpcService(IHelloService.class)
+public class HelloServiceImpl implements IHelloService {
 
     @Override
     public String hello(String name) {

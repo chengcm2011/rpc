@@ -26,7 +26,7 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<RpcRequest> 
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        logger.error(">>>>>>>>>>> xxl-rpc provider netty com.ziroom.bsrd.server caught exception", cause);
+        logger.error(">>>>>>>>>>>rpc provider netty com.ziroom.bsrd.server caught exception", cause);
         ctx.close();
     }
 }
