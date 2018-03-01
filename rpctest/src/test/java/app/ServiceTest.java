@@ -1,12 +1,12 @@
 package app;
 
 
-import com.ziroom.bsrd.IAsyncObjectProxy;
-import com.ziroom.bsrd.RPCFuture;
-import com.ziroom.bsrd.RpcClient;
 import com.ziroom.bsrd.client.IHelloService;
 import com.ziroom.bsrd.client.IPersonService;
 import com.ziroom.bsrd.client.Person;
+import com.ziroom.bsrd.rpc.IAsyncObjectProxy;
+import com.ziroom.bsrd.rpc.RpcClient;
+import com.ziroom.bsrd.rpc.netty.RPCFuture;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;

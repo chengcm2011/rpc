@@ -11,8 +11,7 @@
 
     <context:property-placeholder location="classpath:rpc.properties"/>
 
-    <bean id="rpcServer" class="com.ziroom.bsrd.server.RpcServer">
-        <!--<constructor-arg name="serviceRegistry" ref="serviceRegistry"/>-->
+    <bean id="rpcServer" class="com.ziroom.bsrd.rpc.RpcServer">
     </bean>
 
 </beans>

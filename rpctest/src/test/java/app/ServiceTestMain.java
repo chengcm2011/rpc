@@ -1,8 +1,8 @@
 package app;
 
-import com.ziroom.bsrd.RpcClient;
-import com.ziroom.bsrd.ServiceDiscovery;
 import com.ziroom.bsrd.client.IHelloService;
+import com.ziroom.bsrd.rpc.RpcClient;
+import com.ziroom.bsrd.rpc.zk.ServiceDiscovery;
 import org.junit.Assert;
 
 /**

@@ -9,9 +9,9 @@
 
     <context:property-placeholder location="classpath:rpc.properties"/>
 
-    <bean id="serviceDiscovery" class="com.ziroom.bsrd.ServiceDiscovery"></bean>
+    <bean id="serviceDiscovery" class="com.ziroom.bsrd.rpc.zk.ServiceDiscovery"></bean>
 
-    <bean id="rpcClient" class="com.ziroom.bsrd.RpcClient">
+    <bean id="rpcClient" class="com.ziroom.bsrd.rpc.RpcClient">
         <constructor-arg name="serviceDiscovery" ref="serviceDiscovery"/>
         <property name="servicesAddress" value="${registry.address}"></property>
         <property name="serviceDiscovery" ref="serviceDiscovery"></property>
