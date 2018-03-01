@@ -2,384 +2,140 @@ package com.ziroom.bsrd;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.framework.api.CuratorWatcher;
-import org.apache.curator.framework.state.ConnectionState;
-import org.apache.curator.framework.state.ConnectionStateListener;
-import org.apache.curator.retry.RetryNTimes;
+import org.apache.curator.framework.recipes.cache.PathChildrenCache;
+import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
+import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
+import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.zookeeper.CreateMode;
-import org.apache.zookeeper.WatchedEvent;
-import org.apache.zookeeper.Watcher;
-import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.InetAddress;
-import java.nio.charset.Charset;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class CuratorTest {
 
+
+    private static final String root = "/testroot";
+    private static final String first = "/testroot/first";
+    private static final String second = "/testroot/first/second";
     private static final Logger LOGGER = LoggerFactory.getLogger(CuratorTest.class);
 
-    private CuratorFramework zkTools;
-
-    private ConcurrentSkipListSet watchers = new ConcurrentSkipListSet();
-
-
-    private static Charset charset = Charset.forName("utf-8");
-
-
-    public CuratorTest() {
-
-        zkTools = CuratorFrameworkFactory
-
-                .builder()
-
-                .connectString("10.16.37.112:3181")
-
-                .retryPolicy(new RetryNTimes(2000, 20000)).namespace("rpc")
-
-                .build();
-
-        zkTools.start();
-
-        zkTools.getConnectionStateListenable().addListener(new ConnectionStateListener() {
-
-            @Override
-            public void stateChanged(CuratorFramework client, ConnectionState newState) {
-
-                System.out.println(newState);
-                if (newState.equals(ConnectionState.CONNECTED)) {
-                    LOGGER.info("zk connect success");
-                    //获取所有的服务
-                    Map<String, List<String>> serviceNodes = new HashMap<>();
-                    try {
-                        List<String> serviceList = client.getChildren().forPath("/");
-
-                        for (String service : serviceList) {
-                            List<String> nodeList = client.getChildren().forPath("/" + service);
-                            LOGGER.info("node:" + nodeList.toString());
-                            serviceNodes.put(service, nodeList);
-                        }
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                    LOGGER.info("connect service begin");
-                    ConnectManage.getInstance().initServices(client, serviceNodes);
-                    LOGGER.info("connect service end");
-                }
-            }
-        });
-
-    }
-
-
-    public void addReconnectionWatcher(final String path, final ZookeeperWatcherType watcherType, final CuratorWatcher watcher) {
-
-        synchronized (this) {
-
-            if (!watchers.contains(watcher.toString()))//不要添加重复的监听事件
-
-            {
-
-                watchers.add(watcher.toString());
-
-                System.out.println("add new watcher " + watcher);
-
-                zkTools.getConnectionStateListenable().addListener(new ConnectionStateListener() {
-
-                    @Override
-                    public void stateChanged(CuratorFramework client, ConnectionState newState) {
-
-                        System.out.println(newState);
-
-                        if (newState == ConnectionState.LOST) {//处理session过期
-
-                            try {
-
-                                if (watcherType == ZookeeperWatcherType.EXITS) {
-
-                                    zkTools.checkExists().usingWatcher(watcher).forPath(path);
-
-                                } else if (watcherType == ZookeeperWatcherType.GET_CHILDREN) {
-
-                                    zkTools.getChildren().usingWatcher(watcher).forPath(path);
-
-                                } else if (watcherType == ZookeeperWatcherType.GET_DATA) {
-
-                                    zkTools.getData().usingWatcher(watcher).forPath(path);
-
-                                } else if (watcherType == ZookeeperWatcherType.CREATE_ON_NO_EXITS) {
-
-                                    //ephemeral类型的节点session过期了，需要重新创建节点，并且注册监听事件，之后监听事件中，
-
-                                    //会处理create事件，将路径值恢复到先前状态
-
-                                    Stat stat = zkTools.checkExists().usingWatcher(watcher).forPath(path);
-
-                                    if (stat == null) {
-
-                                        System.err.println("to create");
-
-                                        zkTools.create()
-
-                                                .creatingParentsIfNeeded()
-
-                                                .withMode(CreateMode.EPHEMERAL)
-
-                                                .withACL(ZooDefs.Ids.OPEN_ACL_UNSAFE)
-
-                                                .forPath(path);
-
-                                    }
-
-                                }
-
-                            } catch (Exception e) {
-
-                                e.printStackTrace();
-
-                            }
-
-                        }
-
-                    }
-
-                });
-
-            }
-
-        }
-
-    }
-
-
-    public void create() throws Exception {
-
-        zkTools.create()//创建一个路径
-
-                .creatingParentsIfNeeded()//如果指定的节点的父节点不存在，递归创建父节点
-
-                .withMode(CreateMode.PERSISTENT)//存储类型（临时的还是持久的）
-
-                .withACL(ZooDefs.Ids.OPEN_ACL_UNSAFE)//访问权限
-
-                .forPath("zk/test");//创建的路径
-
-    }
-
-
-    public void put() throws Exception {
-
-        zkTools.//对路径节点赋值
-
-                setData().
-
-                forPath("zk/test", "hello world".getBytes(Charset.forName("utf-8")));
-
-    }
-
-
-    public void get() throws Exception {
-
-        String path = "zk/test";
-
-        ZKWatch watch = new ZKWatch(path);
-
-        byte[] buffer = zkTools.getData().usingWatcher(watch).forPath(path);
-
-        System.out.println(new String(buffer, charset));
-
-        //添加session过期的监控
-
-        addReconnectionWatcher(path, ZookeeperWatcherType.GET_DATA, watch);
-
-    }
-
-
-    public void register() throws Exception {
-
-
-        String ip = InetAddress.getLocalHost().getHostAddress();
-
-        String registeNode = "zk/register/" + ip;//节点路径
-
-
-        byte[] data = "disable".getBytes(charset);//节点值
-
-
-        CuratorWatcher watcher = new ZKWatchRegister(registeNode, data);    //创建一个register watcher
-
-
-        Stat stat = zkTools.checkExists().forPath(registeNode);
-
-        if (stat != null) {
-
-            zkTools.delete().forPath(registeNode);
-
-        }
-
-        zkTools.create()
-
-                .creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL)
-
-                .withACL(ZooDefs.Ids.OPEN_ACL_UNSAFE)
-
-                .forPath(registeNode, data);//创建的路径和值
-
-
-        //添加到session过期监控事件中
-
-        addReconnectionWatcher(registeNode, ZookeeperWatcherType.CREATE_ON_NO_EXITS, watcher);
-
-        data = zkTools.getData().usingWatcher(watcher).forPath(registeNode);
-
-        System.out.println("get path form zk : " + registeNode + ":" + new String(data, charset));
-
-    }
-
-
     public static void main(String[] args) throws Exception {
+        CuratorFramework client = CuratorFrameworkFactory.builder()
+                .connectString("10.16.37.112:3181")
+                .sessionTimeoutMs(5000)
+                .connectionTimeoutMs(3000)
+                .retryPolicy(new ExponentialBackoffRetry(1000, 3))
+                .build();
+        client.start();
 
-        CuratorTest test = new CuratorTest();
+//        client.create().withMode(CreateMode.PERSISTENT)
+//                .forPath("/zk-huey", "hello".getBytes());
+//        client.create().withMode(CreateMode.EPHEMERAL)
+//                .forPath("/zk-huey/ddd", "hello".getBytes());
 
-//        test.get();
+        /**
+         * 在注册监听器的时候，如果传入此参数，当事件触发时，逻辑由线程池处理
+         */
+        ExecutorService pool = Executors.newFixedThreadPool(5);
 
-//        test.register();
-
-        Thread.sleep(10000L);
-
-
-    }
-
-
-    public class ZKWatch implements CuratorWatcher {
-
-        private final String path;
+        /**
+         * 监听数据节点的变化情况
+         */
+//
 
 
-        public String getPath() {
+        /**
+         * 监听子节点的变化情况
+         */
+        final PathChildrenCache childrenCache = new PathChildrenCache(client, root, true);
+        childrenCache.start(PathChildrenCache.StartMode.POST_INITIALIZED_EVENT);
+        childrenCache.getListenable().addListener(
+                new PathChildrenCacheListener() {
+                    @Override
+                    public void childEvent(CuratorFramework client, PathChildrenCacheEvent event)
+                            throws Exception {
+                        switch (event.getType()) {
+                            case CHILD_ADDED:
+                                LOGGER.info("CHILD_ADDED: " + event.getData().getPath());
+                                break;
+                            case CHILD_REMOVED:
+                                LOGGER.info("CHILD_REMOVED: " + event.getData().getPath());
+                                break;
+                            case CHILD_UPDATED:
+                                LOGGER.info("CHILD_UPDATED: " + event.getData().getPath() + "--" + new String(event.getData().getData()));
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                },
+                pool
+        );
 
-            return path;
 
+        Stat f = client.checkExists().forPath(root);
+        if (f == null) {
+            client.create().withMode(CreateMode.PERSISTENT)
+                    .forPath(root, "root".getBytes());
+            Thread.sleep(5 * 1000);
         }
-
-        public ZKWatch(String path) {
-
-            this.path = path;
-
+        Stat fd = client.checkExists().forPath(first);
+        if (fd == null) {
+            client.create().withMode(CreateMode.PERSISTENT)
+                    .forPath(first, "first".getBytes());
+            Thread.sleep(5 * 1000);
+            final PathChildrenCache childrenCachess = new PathChildrenCache(client, first, true);
+            childrenCachess.start(PathChildrenCache.StartMode.POST_INITIALIZED_EVENT);
+            childrenCachess.getListenable().addListener(
+                    new PathChildrenCacheListener() {
+                        @Override
+                        public void childEvent(CuratorFramework client, PathChildrenCacheEvent event)
+                                throws Exception {
+                            switch (event.getType()) {
+                                case CHILD_ADDED:
+                                    LOGGER.info("CHILD_ADDED: " + event.getData().getPath());
+                                    break;
+                                case CHILD_REMOVED:
+                                    LOGGER.info("CHILD_REMOVED: " + event.getData().getPath());
+                                    break;
+                                case CHILD_UPDATED:
+                                    LOGGER.info("CHILD_UPDATED: " + event.getData().getPath() + "--" + new String(event.getData().getData()));
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                    },
+                    pool
+            );
         }
+        client.create().withMode(CreateMode.EPHEMERAL)
+                .forPath(second, "second".getBytes());
+        client.create().withMode(CreateMode.EPHEMERAL)
+                .forPath(first + "/111", "111".getBytes());
+        client.create().withMode(CreateMode.EPHEMERAL)
+                .forPath(first + "/222", "222".getBytes());
+        client.create().withMode(CreateMode.EPHEMERAL)
+                .forPath(first + "/333", "333".getBytes());
+        Thread.sleep(1 * 1000);
 
-        @Override
-
-        public void process(WatchedEvent event) throws Exception {
-
-            System.out.println(event.getType());
-
-            if (event.getType() == Watcher.Event.EventType.NodeDataChanged) {
-
-                byte[] data = zkTools.
-
-                        getData().
-
-                        usingWatcher(this).forPath(path);
-
-                System.out.println(path + ":" + new String(data, Charset.forName("utf-8")));
-
-            }
-
-        }
-
-
-    }
-
-
-    public class ZKWatchRegister implements CuratorWatcher {
-
-        private final String path;
-
-        private byte[] value;
-
-        public String getPath() {
-
-            return path;
-
-        }
-
-        public ZKWatchRegister(String path, byte[] value) {
-
-            this.path = path;
-
-            this.value = value;
-
-        }
-
-        @Override
-
-        public void process(WatchedEvent event) throws Exception {
-
-            System.out.println(event.getType());
-
-            if (event.getType() == Watcher.Event.EventType.NodeDataChanged) {
-
-                //节点数据改变了，需要记录下来，以便session过期后，能够恢复到先前的数据状态
-
-                byte[] data = zkTools.
-
-                        getData().
-
-                        usingWatcher(this).forPath(path);
-
-                value = data;
-
-                System.out.println(path + ":" + new String(data, charset));
-
-            } else if (event.getType() == Watcher.Event.EventType.NodeDeleted) {
-
-                //节点被删除了，需要创建新的节点
-
-                System.out.println(path + ":" + path + " has been deleted.");
-
-                Stat stat = zkTools.checkExists().usingWatcher(this).forPath(path);
-
-                if (stat == null) {
-
-                    zkTools.create()
-
-                            .creatingParentsIfNeeded()
-
-                            .withMode(CreateMode.EPHEMERAL)
-
-                            .withACL(ZooDefs.Ids.OPEN_ACL_UNSAFE)
-
-                            .forPath(path);
-
-                }
-
-
-            } else if (event.getType() == Watcher.Event.EventType.NodeCreated) {
-                //节点被创建时，需要添加监听事件（创建可能是由于session过期后，curator的状态监听部分触发的）
-
-                System.out.println(path + ":" + " has been created!" + "the current data is " + new String(value));
-
-                zkTools.setData().forPath(path, value);
-
-                zkTools.getData().usingWatcher(this).forPath(path);
-
-            }
-
-        }
-
-    }
-
-
-    public enum ZookeeperWatcherType {
-
-        GET_DATA, GET_CHILDREN, EXITS, CREATE_ON_NO_EXITS
-
+        client.setData().forPath(second, "secondData".getBytes());
+        Thread.sleep(1 * 1000);
+        client.setData().forPath(first, "firstData".getBytes());
+        Thread.sleep(1 * 1000);
+        client.delete()
+                .forPath(second);
+        Thread.sleep(1 * 1000);
+        client.delete().forPath(first + "/111");
+        client.delete().forPath(first + "/222");
+        client.delete().forPath(first + "/333");
+        client.delete()
+                .forPath(first);
+        Thread.sleep(1 * 1000);
+        pool.shutdown();
+        client.close();
     }
 }

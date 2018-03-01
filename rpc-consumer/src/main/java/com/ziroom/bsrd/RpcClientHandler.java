@@ -17,21 +17,22 @@ public class RpcClientHandler extends SimpleChannelInboundHandler<RpcResponse> {
 
     private ConcurrentHashMap<String, RPCFuture> pendingRPC = new ConcurrentHashMap<>();
 
+    private String node;
     private volatile Channel channel;
-    private SocketAddress remotePeer;
+    private SocketAddress remoteAddress;
 
     public Channel getChannel() {
         return channel;
     }
 
     public SocketAddress getRemotePeer() {
-        return remotePeer;
+        return remoteAddress;
     }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         super.channelActive(ctx);
-        this.remotePeer = this.channel.remoteAddress();
+        this.remoteAddress = this.channel.remoteAddress();
     }
 
     @Override
@@ -79,5 +80,13 @@ public class RpcClientHandler extends SimpleChannelInboundHandler<RpcResponse> {
         }
 
         return rpcFuture;
+    }
+
+    public String getNode() {
+        return node;
+    }
+
+    public void setNode(String node) {
+        this.node = node;
     }
 }

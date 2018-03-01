@@ -80,7 +80,7 @@ public class ConnectManage {
     private void connectServerNode(String serviceName, final List<String> nodeList) {
 
         for (String nodeinfo : nodeList) {
-            InetSocketAddress remotePeer = parseNode(nodeinfo);
+            InetSocketAddress remoteAddress = parseNode(nodeinfo);
             threadPoolExecutor.submit(new Runnable() {
                 @Override
                 public void run() {
@@ -89,12 +89,12 @@ public class ConnectManage {
                             .channel(NioSocketChannel.class)
                             .handler(new RpcClientInitializer());
 
-                    ChannelFuture channelFuture = b.connect(remotePeer);
+                    ChannelFuture channelFuture = b.connect(remoteAddress);
                     channelFuture.addListener(new ChannelFutureListener() {
                         @Override
                         public void operationComplete(final ChannelFuture channelFuture) throws Exception {
                             if (channelFuture.isSuccess()) {
-                                LOGGER.info("Successfully connect to remote com.ziroom.bsrd.server. remote peer = " + remotePeer);
+                                LOGGER.info("service= {} successfully connect to remote - remote address ={} ", serviceName, remoteAddress);
                                 RpcClientHandler handler = channelFuture.channel().pipeline().get(RpcClientHandler.class);
                                 addHandler(serviceName, handler);
                             }
@@ -103,8 +103,6 @@ public class ConnectManage {
                 }
             });
         }
-
-
     }
 
 
@@ -138,6 +136,25 @@ public class ConnectManage {
             rpcClientHandlerList = new ArrayList<>();
         }
         rpcClientHandlerList.add(handler);
+        connectedServerNodes.put(serviceName, rpcClientHandlerList);
+
+    }
+
+    private void removeHandler(String serviceName, String nodeStr) {
+        List<RpcClientHandler> rpcClientHandlerList = connectedServerNodes.get(serviceName);
+        if (rpcClientHandlerList == null) {
+            rpcClientHandlerList = new ArrayList<>();
+        }
+        int removeIndex = 0;
+        for (int i = 0; i < rpcClientHandlerList.size(); i++) {
+            RpcClientHandler clientHandler = rpcClientHandlerList.get(i);
+            if (clientHandler.getNode().equals(nodeStr)) {
+                removeIndex = i;
+            }
+        }
+        if (removeIndex != 0) {
+            rpcClientHandlerList.remove(removeIndex);
+        }
         connectedServerNodes.put(serviceName, rpcClientHandlerList);
 
     }
@@ -182,7 +199,7 @@ public class ConnectManage {
         }
         int index = (roundRobin.getAndAdd(1) + size) % size;
         RpcClientHandler selectRpcClientHandler = handlers.get(index);
-        LOGGER.info("service:{} select {}", serviceName, selectRpcClientHandler.getRemotePeer());
+        LOGGER.info("service={} select={}", serviceName, selectRpcClientHandler.getRemotePeer());
         return selectRpcClientHandler;
     }
 
@@ -197,5 +214,70 @@ public class ConnectManage {
         }
         threadPoolExecutor.shutdown();
         eventLoopGroup.shutdownGracefully();
+    }
+
+    public void updateServicesNode(String data) {
+
+    }
+
+    public void removeServicesNode(String data) {
+        NodeVO nodeVo = getNode(data);
+        if (nodeVo.getType().equals(NodeType.NODE)) {
+            removeServerNode(nodeVo);
+        }
+    }
+
+    public void addServicesNode(String data) {
+        NodeVO nodeVo = getNode(data);
+        if (nodeVo.getType().equals(NodeType.NODE)) {
+            addServerNode(nodeVo);
+        }
+    }
+
+
+    private NodeVO getNode(String data) {
+        String[] d = data.split(";");
+        NodeVO nodeVo = new NodeVO(d[0]);
+        if (NodeType.SERVICE.equals(nodeVo.getType())) {
+            nodeVo.setServiceName(d[1]);
+        }
+        if (NodeType.NODE.equals(nodeVo.getType())) {
+            nodeVo.setServiceName(d[1]);
+            nodeVo.setNode(parseNode(d[2]));
+            nodeVo.setNodeStr(d[2]);
+        }
+        return nodeVo;
+    }
+
+
+    private void addServerNode(NodeVO nodevo) {
+        String serviceName = nodevo.getServiceName();
+        InetSocketAddress remoteAddress = nodevo.getNode();
+        threadPoolExecutor.submit(new Runnable() {
+            @Override
+            public void run() {
+                Bootstrap b = new Bootstrap();
+                b.group(eventLoopGroup)
+                        .channel(NioSocketChannel.class)
+                        .handler(new RpcClientInitializer());
+
+                ChannelFuture channelFuture = b.connect(remoteAddress);
+                channelFuture.addListener(new ChannelFutureListener() {
+                    @Override
+                    public void operationComplete(final ChannelFuture channelFuture) throws Exception {
+                        if (channelFuture.isSuccess()) {
+                            LOGGER.info("service= {} successfully connect to remote - remote address ={} ", serviceName, remoteAddress);
+                            RpcClientHandler handler = channelFuture.channel().pipeline().get(RpcClientHandler.class);
+                            handler.setNode(nodevo.getNodeStr());
+                            addHandler(serviceName, handler);
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    private void removeServerNode(NodeVO nodeVo) {
+        removeHandler(nodeVo.getServiceName(), nodeVo.getNodeStr());
     }
 }

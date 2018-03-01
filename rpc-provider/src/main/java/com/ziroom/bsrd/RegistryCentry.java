@@ -46,15 +46,19 @@ public class RegistryCentry {
         for (String interfaceName : servicesItfList) {
             String interfaceNamePath = "/" + interfaceName;
             Stat ifacePathStat = client.checkExists().forPath(interfaceNamePath);
+            String nodeData = NodeType.SERVICE + ";" + interfaceName;
             if (ifacePathStat == null) {
-                client.create().withMode(CreateMode.PERSISTENT).withACL(ZooDefs.Ids.OPEN_ACL_UNSAFE).forPath(interfaceNamePath, interfaceName.getBytes());
+                client.create().withMode(CreateMode.PERSISTENT).withACL(ZooDefs.Ids.OPEN_ACL_UNSAFE).forPath(interfaceNamePath, nodeData.getBytes());
+            } else {
+                client.setData().forPath(interfaceNamePath, nodeData.getBytes());
             }
             String serverAddressPath = interfaceNamePath + "/" + serverAddress;
             Stat addreddStat = client.checkExists().forPath(serverAddressPath);
             if (addreddStat != null) {
                 client.delete().forPath(serverAddressPath);
             }
-            client.create().withMode(CreateMode.EPHEMERAL).withACL(ZooDefs.Ids.OPEN_ACL_UNSAFE).forPath(serverAddressPath, serverAddress.getBytes());
+            nodeData = NodeType.NODE + ";" + interfaceName + ";" + serverAddress;
+            client.create().withMode(CreateMode.EPHEMERAL).withACL(ZooDefs.Ids.OPEN_ACL_UNSAFE).forPath(serverAddressPath, nodeData.getBytes());
             ApplicationLogger.info(" RegistryCentry reginster service on zk success interfaceName:{},serverAddress:{}, path:{}", interfaceName, serverAddress, serverAddressPath);
         }
 
