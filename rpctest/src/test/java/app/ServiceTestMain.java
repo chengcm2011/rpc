@@ -3,7 +3,6 @@ package app;
 import com.ziroom.bsrd.client.IHelloService;
 import com.ziroom.bsrd.rpc.RpcClient;
 import com.ziroom.bsrd.rpc.zk.ServiceDiscovery;
-import org.junit.Assert;
 
 /**
  * @author chengys4
@@ -16,11 +15,10 @@ public class ServiceTestMain {
         serviceDiscovery.setNamespace("rpc");
         RpcClient rpcClient = new RpcClient(serviceDiscovery);
         rpcClient.init();
-        Thread.sleep(3000L);
+        Thread.sleep(6000L);
         IHelloService helloService = rpcClient.create(IHelloService.class);
         String result = helloService.hello("World");
         System.out.println(result);
-        Assert.assertEquals("Hello! World", result);
 
         Thread.sleep(1000L);
 

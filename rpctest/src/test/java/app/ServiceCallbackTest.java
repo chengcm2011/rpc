@@ -28,10 +28,6 @@ public class ServiceCallbackTest {
         try {
             rpcClient.init();
             Thread.sleep(3000L);
-
-
-            Thread.sleep(3000L);
-
             IAsyncObjectProxy client = rpcClient.createAsync(IPersonService.class);
             int num = 5;
             RPCFuture helloPersonFuture = client.call("GetTestPerson", "xiaoming", num);
