@@ -53,9 +53,9 @@ public class ServiceProxy<T> implements InvocationHandler, IAsyncObjectProxy {
     }
 
     @Override
-    public RPCFuture call(String funcName, Object... args) {
+    public RPCFuture call(String methodName, Object... args) {
         RpcClientHandler handler = ConnectManage.getInstance().chooseHandler(this.clazz.getName());
-        RpcRequest request = createRequest(this.clazz.getName(), funcName, args);
+        RpcRequest request = createRequest(this.clazz.getName(), methodName, args);
         RPCFuture rpcFuture = handler.sendRequest(request);
         return rpcFuture;
     }
@@ -68,29 +68,10 @@ public class ServiceProxy<T> implements InvocationHandler, IAsyncObjectProxy {
         request.setParameters(args);
 
         Class[] parameterTypes = new Class[args.length];
-        // Get the right class type
         for (int i = 0; i < args.length; i++) {
             parameterTypes[i] = getClassType(args[i]);
         }
         request.setParameterTypes(parameterTypes);
-//        Method[] methods = clazz.getDeclaredMethods();
-//        for (int i = 0; i < methods.length; ++i) {
-//            // Bug: if there are 2 methods have the same name
-//            if (methods[i].getName().equals(methodName)) {
-//                parameterTypes = methods[i].getParameterTypes();
-//                request.setParameterTypes(parameterTypes); // get parameter types
-//                break;
-//            }
-//        }
-
-//        LOGGER.debug(className);
-//        LOGGER.debug(methodName);
-        for (int i = 0; i < parameterTypes.length; ++i) {
-//            LOGGER.debug(parameterTypes[i].getName());
-        }
-        for (int i = 0; i < args.length; ++i) {
-//            LOGGER.debug(args[i].toString());
-        }
 
         return request;
     }

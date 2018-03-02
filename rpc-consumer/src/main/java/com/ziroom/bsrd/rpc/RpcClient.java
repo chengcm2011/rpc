@@ -35,7 +35,7 @@ public class RpcClient implements InitializingBean {
     }
 
     public static <T> IAsyncObjectProxy createAsync(Class<T> interfaceClass) {
-        return new ServiceProxy<T>(interfaceClass);
+        return new ServiceProxy<>(interfaceClass);
     }
 
     public static void submit(Runnable task) {

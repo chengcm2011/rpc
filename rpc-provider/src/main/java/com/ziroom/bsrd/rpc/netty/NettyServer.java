@@ -39,6 +39,11 @@ public class NettyServer extends IServer {
                             .childHandler(new ChannelInitializer<SocketChannel>() {
                                 @Override
                                 public void initChannel(SocketChannel channel) throws Exception {
+                                    /**
+                                     * 需要按顺序来 服务器先解码 在编码
+                                     * @param socketChannel
+                                     * @throws Exception
+                                     */
                                     channel.pipeline()
                                             .addLast(new NettyDecoder(RpcRequest.class, serializer))
                                             .addLast(new NettyEncoder(RpcResponse.class, serializer))

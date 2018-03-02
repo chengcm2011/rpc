@@ -12,6 +12,13 @@ import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 
 
 public class RpcClientInitializer extends ChannelInitializer<SocketChannel> {
+
+    /**
+     * 需要按顺序来 客户端 先编码 在解码
+     *
+     * @param socketChannel
+     * @throws Exception
+     */
     @Override
     protected void initChannel(SocketChannel socketChannel) throws Exception {
         ChannelPipeline cp = socketChannel.pipeline();

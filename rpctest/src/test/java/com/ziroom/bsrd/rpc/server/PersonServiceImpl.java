@@ -8,9 +8,6 @@ import com.ziroom.bsrd.rpc.annotation.RpcService;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by luxiaoxun on 2016-03-10.
- */
 @RpcService(IPersonService.class)
 public class PersonServiceImpl implements IPersonService {
 
