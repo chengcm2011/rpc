@@ -3,7 +3,7 @@ package com.ziroom.bsrd.rpc.zk;
 import com.ziroom.bsrd.rpc.IAsyncObjectProxy;
 import com.ziroom.bsrd.rpc.netty.ConnectManage;
 import com.ziroom.bsrd.rpc.netty.RPCFuture;
-import com.ziroom.bsrd.rpc.netty.RpcClientHandler;
+import com.ziroom.bsrd.rpc.netty.RpcClientHandler2;
 import com.ziroom.bsrd.rpc.vo.RpcRequest;
 
 import java.lang.reflect.InvocationHandler;
@@ -46,7 +46,7 @@ public class ServiceProxy<T> implements InvocationHandler, IAsyncObjectProxy {
         request.setParameterTypes(method.getParameterTypes());
         request.setParameters(args);
 
-        RpcClientHandler handler = ConnectManage.getInstance().chooseHandler(clazz.getName());
+        RpcClientHandler2 handler = ConnectManage.getInstance().chooseHandler(clazz.getName());
         RPCFuture rpcFuture = handler.sendRequest(request);
         return rpcFuture.get();
 
@@ -54,7 +54,7 @@ public class ServiceProxy<T> implements InvocationHandler, IAsyncObjectProxy {
 
     @Override
     public RPCFuture call(String funcName, Object... args) {
-        RpcClientHandler handler = ConnectManage.getInstance().chooseHandler(this.clazz.getName());
+        RpcClientHandler2 handler = ConnectManage.getInstance().chooseHandler(this.clazz.getName());
         RpcRequest request = createRequest(this.clazz.getName(), funcName, args);
         RPCFuture rpcFuture = handler.sendRequest(request);
         return rpcFuture;

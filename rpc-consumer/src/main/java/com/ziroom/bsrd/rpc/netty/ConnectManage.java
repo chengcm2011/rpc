@@ -4,9 +4,7 @@ import com.ziroom.bsrd.log.ApplicationLogger;
 import com.ziroom.bsrd.rpc.itf.NodeType;
 import com.ziroom.bsrd.rpc.vo.NodeVO;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import org.slf4j.Logger;
@@ -35,7 +33,7 @@ public class ConnectManage {
     EventLoopGroup eventLoopGroup = new NioEventLoopGroup(4);
 
     private static ExecutorService threadPoolExecutor = Executors.newFixedThreadPool(10);
-    private Map<String, List<RpcClientHandler>> connectedServerNodes = new ConcurrentHashMap<>();
+    private Map<String, List<RpcClientHandler2>> connectedServerNodes = new ConcurrentHashMap<>();
 
     private ReentrantLock lock = new ReentrantLock();
     private Condition connected = lock.newCondition();
@@ -88,22 +86,36 @@ public class ConnectManage {
                     Bootstrap b = new Bootstrap();
                     b.group(eventLoopGroup)
                             .channel(NioSocketChannel.class)
-                            .handler(new RpcClientInitializer());
-
+                            .handler(new RpcClientInitializer())
+                            .option(ChannelOption.TCP_NODELAY, true)
+                            .option(ChannelOption.SO_REUSEADDR, true)
+                            .option(ChannelOption.SO_KEEPALIVE, true);
                     ChannelFuture channelFuture = b.connect(remoteAddress);
                     channelFuture.addListener(new ChannelFutureListener() {
                         @Override
                         public void operationComplete(final ChannelFuture channelFuture) throws Exception {
                             if (channelFuture.isSuccess()) {
                                 LOGGER.info("service= {} successfully connect to remote - remote address ={} ", serviceName, remoteAddress);
-                                RpcClientHandler handler = channelFuture.channel().pipeline().get(RpcClientHandler.class);
-                                addHandler(serviceName, handler);
+//                                RpcClientHandler handler = channelFuture.channel().pipeline().get(RpcClientHandler.class);
+                                RpcClientHandler2 handler = new RpcClientHandler2();
+                                Channel channel = channelFuture.sync().channel();
+                                handler.setChannel(channel);
+                                addHandler2(serviceName, handler);
                             }
                         }
                     });
                 }
             });
         }
+    }
+
+    private void addHandler2(String serviceName, RpcClientHandler2 handler) {
+        List<RpcClientHandler2> rpcClientHandlerList = connectedServerNodes.get(serviceName);
+        if (rpcClientHandlerList == null) {
+            rpcClientHandlerList = new ArrayList<>();
+        }
+        rpcClientHandlerList.add(handler);
+        connectedServerNodes.put(serviceName, rpcClientHandlerList);
     }
 
 
@@ -125,30 +137,24 @@ public class ConnectManage {
         return null;
     }
 
-    /**
-     * 添加
-     *
-     * @param serviceName
-     * @param handler
-     */
-    private void addHandler(String serviceName, RpcClientHandler handler) {
-        List<RpcClientHandler> rpcClientHandlerList = connectedServerNodes.get(serviceName);
-        if (rpcClientHandlerList == null) {
-            rpcClientHandlerList = new ArrayList<>();
-        }
-        rpcClientHandlerList.add(handler);
-        connectedServerNodes.put(serviceName, rpcClientHandlerList);
-
-    }
+//    private void addHandler(String serviceName, RpcClientHandler2 handler) {
+//        List<RpcClientHandler> rpcClientHandlerList = connectedServerNodes.get(serviceName);
+//        if (rpcClientHandlerList == null) {
+//            rpcClientHandlerList = new ArrayList<>();
+//        }
+//        rpcClientHandlerList.add(handler);
+//        connectedServerNodes.put(serviceName, rpcClientHandlerList);
+//
+//    }
 
     private void removeHandler(String serviceName, String nodeStr) {
-        List<RpcClientHandler> rpcClientHandlerList = connectedServerNodes.get(serviceName);
+        List<RpcClientHandler2> rpcClientHandlerList = connectedServerNodes.get(serviceName);
         if (rpcClientHandlerList == null) {
             rpcClientHandlerList = new ArrayList<>();
         }
         int removeIndex = 0;
         for (int i = 0; i < rpcClientHandlerList.size(); i++) {
-            RpcClientHandler clientHandler = rpcClientHandlerList.get(i);
+            RpcClientHandler2 clientHandler = rpcClientHandlerList.get(i);
             if (clientHandler.getNode().equals(nodeStr)) {
                 removeIndex = i;
             }
@@ -184,8 +190,8 @@ public class ConnectManage {
      * @param serviceName
      * @return
      */
-    public RpcClientHandler chooseHandler(String serviceName) {
-        List<RpcClientHandler> handlers = connectedServerNodes.get(serviceName);
+    public RpcClientHandler2 chooseHandler(String serviceName) {
+        List<RpcClientHandler2> handlers = connectedServerNodes.get(serviceName);
         int size = handlers.size();
         while (isRuning && size <= 0) {
             try {
@@ -199,17 +205,17 @@ public class ConnectManage {
             }
         }
         int index = (roundRobin.getAndAdd(1) + size) % size;
-        RpcClientHandler selectRpcClientHandler = handlers.get(index);
-        LOGGER.info("service={} select={}", serviceName, selectRpcClientHandler.getRemotePeer());
+        RpcClientHandler2 selectRpcClientHandler = handlers.get(index);
+        LOGGER.info("service={} select={}", serviceName, selectRpcClientHandler.getNode());
         return selectRpcClientHandler;
     }
 
     public void stop() {
         isRuning = false;
-        for (Map.Entry<String, List<RpcClientHandler>> listEntry : connectedServerNodes.entrySet()) {
-            List<RpcClientHandler> rpcClientHandlerList = listEntry.getValue();
+        for (Map.Entry<String, List<RpcClientHandler2>> listEntry : connectedServerNodes.entrySet()) {
+            List<RpcClientHandler2> rpcClientHandlerList = listEntry.getValue();
             for (int i = 0; i < rpcClientHandlerList.size(); ++i) {
-                RpcClientHandler connectedServerHandler = rpcClientHandlerList.get(i);
+                RpcClientHandler2 connectedServerHandler = rpcClientHandlerList.get(i);
                 connectedServerHandler.close();
             }
         }
@@ -268,9 +274,14 @@ public class ConnectManage {
                     public void operationComplete(final ChannelFuture channelFuture) throws Exception {
                         if (channelFuture.isSuccess()) {
                             LOGGER.info("service= {} successfully connect to remote - remote address ={} ", serviceName, remoteAddress);
-                            RpcClientHandler handler = channelFuture.channel().pipeline().get(RpcClientHandler.class);
-                            handler.setNode(nodevo.getNodeStr());
-                            addHandler(serviceName, handler);
+//                            RpcClientHandler handler = channelFuture.channel().pipeline().get(RpcClientHandler.class);
+//                            handler.setNode(nodevo.getNodeStr());
+//                            addHandler2(serviceName, handler);
+
+                            RpcClientHandler2 handler = new RpcClientHandler2();
+                            Channel channel = channelFuture.sync().channel();
+                            handler.setChannel(channel);
+                            addHandler2(serviceName, handler);
                         }
                     }
                 });
