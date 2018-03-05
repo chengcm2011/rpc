@@ -43,6 +43,9 @@ public class RpcClientHandler extends SimpleChannelInboundHandler<RpcResponse> {
 
     @Override
     public void channelRead0(ChannelHandlerContext ctx, RpcResponse response) throws Exception {
+
+        ApplicationLogger.info("receive response:" + response.toString());
+
         String requestId = response.getRequestId();
         RPCFuture rpcFuture = pendingRPC.get(requestId);
         if (rpcFuture != null) {
@@ -65,8 +68,6 @@ public class RpcClientHandler extends SimpleChannelInboundHandler<RpcResponse> {
         final CountDownLatch latch = new CountDownLatch(1);
         RPCFuture rpcFuture = new RPCFuture(request);
         pendingRPC.put(request.getRequestId(), rpcFuture);
-        channel.writeAndFlush(request);
-
         channel.writeAndFlush(request).addListener(new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture future) {

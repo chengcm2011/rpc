@@ -17,6 +17,9 @@ import org.springframework.context.ApplicationContextAware;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * cheng
@@ -25,6 +28,7 @@ import java.util.Map;
 public class RpcServer implements ApplicationContextAware, InitializingBean, DisposableBean {
 
     private static Map<String, Object> servicesMap = new HashMap<>();
+    private static ThreadPoolExecutor threadPoolExecutor;
     private IServer server;
     private int port = 7080;
 
@@ -82,4 +86,17 @@ public class RpcServer implements ApplicationContextAware, InitializingBean, Dis
 
         RegistryCentry.registerServices(port, servicesMap.keySet());
     }
+
+
+    public static void submit(Runnable task) {
+        if (threadPoolExecutor == null) {
+            synchronized (RpcServer.class) {
+                if (threadPoolExecutor == null) {
+                    threadPoolExecutor = new ThreadPoolExecutor(16, 16, 600L, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(65536));
+                }
+            }
+        }
+        threadPoolExecutor.submit(task);
+    }
+
 }
