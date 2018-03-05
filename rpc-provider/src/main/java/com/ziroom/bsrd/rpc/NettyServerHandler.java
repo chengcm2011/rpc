@@ -39,4 +39,10 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<RpcRequest> 
         ApplicationLogger.info("rpc provider netty server caught exception", cause);
         ctx.close();
     }
+
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        super.channelInactive(ctx);
+        ApplicationLogger.info(ctx.channel().remoteAddress() + " close connect 。");
+    }
+
 }

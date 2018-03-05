@@ -14,7 +14,7 @@ debug:当此属性设置为true时，将打印出logback内部日志信息，实
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>
-                %d{HH:mm:ss.SSS} [%thread] %-5level %logger{60} - %msg%n
+                %d{HH:mm:ss.SSS} [%thread] %-5level - %msg%n
             </pattern>
         </encoder>
     </appender>
