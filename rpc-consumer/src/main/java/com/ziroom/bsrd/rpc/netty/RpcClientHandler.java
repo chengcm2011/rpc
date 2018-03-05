@@ -1,21 +1,21 @@
 package com.ziroom.bsrd.rpc.netty;
 
 import com.ziroom.bsrd.log.ApplicationLogger;
+import com.ziroom.bsrd.rpc.RpcClient;
 import com.ziroom.bsrd.rpc.vo.RpcRequest;
 import com.ziroom.bsrd.rpc.vo.RpcResponse;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.*;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
 
 import java.net.SocketAddress;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
 
 /**
  * rpc 请求客户端
  */
 public class RpcClientHandler extends SimpleChannelInboundHandler<RpcResponse> {
-
-    private ConcurrentHashMap<String, RPCFuture> pendingRPC = new ConcurrentHashMap<>();
 
     private String node;
     private volatile Channel channel;
@@ -47,9 +47,9 @@ public class RpcClientHandler extends SimpleChannelInboundHandler<RpcResponse> {
         ApplicationLogger.info("receive response:" + response.toString());
 
         String requestId = response.getRequestId();
-        RPCFuture rpcFuture = pendingRPC.get(requestId);
+        RPCFuture rpcFuture = RpcClient.pendingRPC.get(requestId);
         if (rpcFuture != null) {
-            pendingRPC.remove(requestId);
+            RpcClient.pendingRPC.remove(requestId);
             rpcFuture.done(response);
         }
     }
@@ -65,22 +65,21 @@ public class RpcClientHandler extends SimpleChannelInboundHandler<RpcResponse> {
     }
 
     public RPCFuture sendRequest(RpcRequest request) {
-        final CountDownLatch latch = new CountDownLatch(1);
-        RPCFuture rpcFuture = new RPCFuture(request);
-        pendingRPC.put(request.getRequestId(), rpcFuture);
-        channel.writeAndFlush(request).addListener(new ChannelFutureListener() {
-            @Override
-            public void operationComplete(ChannelFuture future) {
-                latch.countDown();
-            }
-        });
-        try {
-            latch.await();
-        } catch (InterruptedException e) {
-            ApplicationLogger.error(e.getMessage(), e);
-        }
+//        final CountDownLatch latch = new CountDownLatch(1);
+//        RPCFuture rpcFuture = new RPCFuture(request);
+//        channel.writeAndFlush(request).addListener(new ChannelFutureListener() {
+//            @Override
+//            public void operationComplete(ChannelFuture future) {
+//                latch.countDown();
+//            }
+//        });
+//        try {
+//            latch.await();
+//        } catch (InterruptedException e) {
+//            ApplicationLogger.error(e.getMessage(), e);
+//        }
 
-        return rpcFuture;
+        return null;
     }
 
     public String getNode() {

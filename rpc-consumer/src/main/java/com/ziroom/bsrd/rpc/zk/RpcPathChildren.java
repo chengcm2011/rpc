@@ -1,6 +1,5 @@
 package com.ziroom.bsrd.rpc.zk;
 
-import com.ziroom.bsrd.rpc.netty.ConnectManage;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
@@ -44,15 +43,15 @@ public class RpcPathChildren implements PathChildrenCacheListener {
             case CHILD_ADDED:
                 LOGGER.info(event.getType() + "--" + event.getData().getPath() + "--" + new String(event.getData().getData()));
                 ChildData childData = event.getData();
-                ConnectManage.getInstance().addServicesNode(new String(childData.getData()));
+                ServiceNodeManange.getInstance().addServicesNode(new String(childData.getData()));
                 break;
             case CHILD_REMOVED:
                 LOGGER.info(event.getType() + "--" + event.getData().getPath() + "--" + new String(event.getData().getData()));
-                ConnectManage.getInstance().removeServicesNode(new String(event.getData().getData()));
+                ServiceNodeManange.getInstance().removeServicesNode(new String(event.getData().getData()));
                 break;
             case CHILD_UPDATED:
                 LOGGER.info(event.getType() + "--" + event.getData().getPath() + "--" + new String(event.getData().getData()));
-                ConnectManage.getInstance().updateServicesNode(new String(event.getData().getData()));
+                ServiceNodeManange.getInstance().updateServicesNode(new String(event.getData().getData()));
                 break;
             default:
                 break;

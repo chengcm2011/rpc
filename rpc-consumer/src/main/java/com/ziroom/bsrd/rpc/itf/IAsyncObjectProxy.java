@@ -1,4 +1,4 @@
-package com.ziroom.bsrd.rpc;
+package com.ziroom.bsrd.rpc.itf;
 
 import com.ziroom.bsrd.rpc.netty.RPCFuture;
 

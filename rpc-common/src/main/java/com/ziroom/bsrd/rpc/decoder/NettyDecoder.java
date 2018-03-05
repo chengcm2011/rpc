@@ -9,11 +9,10 @@ import java.util.List;
 public class NettyDecoder extends ByteToMessageDecoder {
 
     private Class<?> genericClass;
-    private Serializer serializer;
+    private Serializer serializer = new HessianSerializer();
 
-    public NettyDecoder(Class<?> genericClass, Serializer serializer) {
+    public NettyDecoder(Class<?> genericClass) {
         this.genericClass = genericClass;
-        this.serializer = serializer;
     }
 
     @Override

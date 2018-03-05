@@ -1,12 +1,20 @@
 package com.ziroom.bsrd.rpc;
 
-import com.ziroom.bsrd.rpc.netty.ConnectManage;
+import com.ziroom.bsrd.rpc.client.NettyClient;
+import com.ziroom.bsrd.rpc.client.NettyClientPool;
+import com.ziroom.bsrd.rpc.itf.IAsyncObjectProxy;
+import com.ziroom.bsrd.rpc.netty.RPCFuture;
+import com.ziroom.bsrd.rpc.vo.NodeVO;
+import com.ziroom.bsrd.rpc.vo.RpcRequest;
 import com.ziroom.bsrd.rpc.zk.ServiceDiscovery;
+import com.ziroom.bsrd.rpc.zk.ServiceNodeManange;
 import com.ziroom.bsrd.rpc.zk.ServiceProxy;
+import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.springframework.beans.factory.InitializingBean;
 
 import java.lang.reflect.Proxy;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -21,6 +29,8 @@ public class RpcClient implements InitializingBean {
     private static ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(16, 16, 600L, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(65536));
 
     private ServiceDiscovery serviceDiscovery;
+
+    public static ConcurrentHashMap<String, RPCFuture> pendingRPC = new ConcurrentHashMap<>();
 
     public RpcClient(ServiceDiscovery serviceDiscovery) {
         this.serviceDiscovery = serviceDiscovery;
@@ -45,7 +55,8 @@ public class RpcClient implements InitializingBean {
     public void stop() {
         threadPoolExecutor.shutdown();
         serviceDiscovery.stop();
-        ConnectManage.getInstance().stop();
+        ServiceNodeManange.getInstance().getEventLoopGroup().shutdownGracefully();
+        NettyClientPool.stop();
     }
 
     public ServiceDiscovery getServiceDiscovery() {
@@ -63,5 +74,28 @@ public class RpcClient implements InitializingBean {
 
     public void init() throws Exception {
         afterPropertiesSet();
+    }
+
+    public static Object send(RpcRequest request) throws Exception {
+        NodeVO nodeVO = ServiceNodeManange.getInstance().chooseHandler(request.getClassName());
+        GenericObjectPool<NettyClient> clientPool = NettyClientPool.getNettyClientPool(nodeVO);
+
+        // client proxt
+        NettyClient clientPoolProxy = null;
+        try {
+            RPCFuture rpcFuture = new RPCFuture(request);
+            pendingRPC.put(request.getRequestId(), rpcFuture);
+            // rpc invoke
+            clientPoolProxy = clientPool.borrowObject();
+
+            clientPoolProxy.send(request);
+            // future get
+            return rpcFuture.get();
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            clientPool.returnObject(clientPoolProxy);
+        }
+
     }
 }

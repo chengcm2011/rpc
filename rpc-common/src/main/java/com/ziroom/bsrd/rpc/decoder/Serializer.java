@@ -1,6 +1,8 @@
 package com.ziroom.bsrd.rpc.decoder;
 
-public interface Serializer {
+import java.io.Serializable;
+
+public interface Serializer extends Serializable {
 
     <T> byte[] serialize(T obj);
 

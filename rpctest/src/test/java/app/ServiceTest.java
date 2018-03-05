@@ -1,8 +1,12 @@
 package app;
 
 import com.ziroom.bsrd.client.IHelloService;
+import com.ziroom.bsrd.client.IPersonService;
+import com.ziroom.bsrd.client.Person;
 import com.ziroom.bsrd.rpc.RpcClient;
 import com.ziroom.bsrd.rpc.zk.ServiceDiscovery;
+
+import java.util.List;
 
 /**
  * @author chengys4
@@ -15,10 +19,16 @@ public class ServiceTest {
         serviceDiscovery.setNamespace("rpc");
         RpcClient rpcClient = new RpcClient(serviceDiscovery);
         rpcClient.init();
-        Thread.sleep(3000L);
+        Thread.sleep(1000);
         IHelloService helloService = rpcClient.create(IHelloService.class);
-        String result = helloService.hello("World");
+        String result = helloService.hello("cheng");
         System.out.println(result);
+        Thread.sleep(200);
+        result = helloService.hello(new Person("cheng", "yingsheng"));
+        System.out.println(result);
+        IPersonService personService = rpcClient.create(IPersonService.class);
+        List<Person> d = personService.GetTestPerson("cheng", 1);
+        System.out.println(d.toString());
         rpcClient.stop();
     }
 }

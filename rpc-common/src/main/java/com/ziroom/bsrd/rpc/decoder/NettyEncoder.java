@@ -7,11 +7,10 @@ import io.netty.handler.codec.MessageToByteEncoder;
 public class NettyEncoder extends MessageToByteEncoder<Object> {
 
     private Class<?> genericClass;
-    private Serializer serializer;
+    private Serializer serializer = new HessianSerializer();
 
-    public NettyEncoder(Class<?> genericClass, Serializer serializer) {
+    public NettyEncoder(Class<?> genericClass) {
         this.genericClass = genericClass;
-        this.serializer = serializer;
     }
 
     @Override

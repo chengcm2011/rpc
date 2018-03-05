@@ -45,8 +45,8 @@ public class NettyServer extends IServer {
                                      * @throws Exception
                                      */
                                     channel.pipeline()
-                                            .addLast(new NettyDecoder(RpcRequest.class, serializer))
-                                            .addLast(new NettyEncoder(RpcResponse.class, serializer))
+                                            .addLast(new NettyDecoder(RpcRequest.class))
+                                            .addLast(new NettyEncoder(RpcResponse.class))
                                             .addLast(new NettyServerHandler());
                                 }
                             })
