@@ -1,5 +1,6 @@
 package com.ziroom.bsrd.rpc.client;
 
+import com.ziroom.bsrd.log.ApplicationLogger;
 import com.ziroom.bsrd.rpc.decoder.NettyDecoder;
 import com.ziroom.bsrd.rpc.decoder.NettyEncoder;
 import com.ziroom.bsrd.rpc.netty.RpcClientHandler;
@@ -12,13 +13,10 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 
 public class NettyClient {
-    private static transient Logger logger = LoggerFactory.getLogger(NettyClient.class);
 
     private Channel channel;
 
@@ -57,7 +55,7 @@ public class NettyClient {
                 this.channel.close();
             }
         }
-        logger.info("netty channel close.");
+        ApplicationLogger.info("netty channel close.");
     }
 
     public void send(RpcRequest request) throws Exception {

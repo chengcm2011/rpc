@@ -2,7 +2,7 @@ package com.ziroom.bsrd.rpc.zk;
 
 
 import com.ziroom.bsrd.log.ApplicationLogger;
-import com.ziroom.bsrd.rpc.itf.NodeType;
+import com.ziroom.bsrd.rpc.client.NettyClientPool;
 import com.ziroom.bsrd.rpc.vo.NodeVO;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -63,7 +63,7 @@ public class ServiceNodeManange {
 
     public void removeServicesNode(String data) {
         NodeVO nodeVo = getNode(data);
-        if (nodeVo.getType().equals(NodeType.NODE)) {
+        if (nodeVo.getType().equals(NodeVO.NODE)) {
             removeServerNode(nodeVo);
         }
     }
@@ -82,15 +82,18 @@ public class ServiceNodeManange {
             }
         }
         if (removeIndex != 0) {
+            //从连接池中删除
+            NettyClientPool.removeNettyClientPool(nodeVOList.get(removeIndex));
             nodeVOList.remove(removeIndex);
         }
+        //从服务节点删除
         serviceNodes.put(nodeVo.getServiceName(), nodeVOList);
 
     }
 
     public void addServicesNode(String data) {
         NodeVO nodeVo = getNode(data);
-        if (nodeVo.getType().equals(NodeType.NODE)) {
+        if (nodeVo.getType().equals(NodeVO.NODE)) {
             addServerNode(nodeVo);
         }
     }
@@ -107,10 +110,10 @@ public class ServiceNodeManange {
     private NodeVO getNode(String data) {
         String[] d = data.split(";");
         NodeVO nodeVo = new NodeVO(d[0]);
-        if (NodeType.SERVICE.equals(nodeVo.getType())) {
+        if (NodeVO.SERVICE.equals(nodeVo.getType())) {
             nodeVo.setServiceName(d[1]);
         }
-        if (NodeType.NODE.equals(nodeVo.getType())) {
+        if (NodeVO.NODE.equals(nodeVo.getType())) {
             nodeVo.setServiceName(d[1]);
             nodeVo.setNode(parseNode(d[2]));
             nodeVo.setNodeStr(d[2]);

@@ -6,11 +6,6 @@ import org.apache.commons.pool2.impl.DefaultPooledObject;
 
 import java.net.InetSocketAddress;
 
-/**
- * pool factory
- *
- * @author xuxueli 2015-11-5 22:07:35
- */
 public class NettyClientFactory extends BasePooledObjectFactory<NettyClient> {
 
     private InetSocketAddress inetSocketAddress;

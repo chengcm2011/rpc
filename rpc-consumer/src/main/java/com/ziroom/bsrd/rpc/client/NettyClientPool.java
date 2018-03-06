@@ -10,6 +10,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class NettyClientPool {
 
     private GenericObjectPool<NettyClient> pool;
+    private static ConcurrentHashMap<String, NettyClientPool> clientPoolMap = new ConcurrentHashMap<>();
+
 
     public NettyClientPool(InetSocketAddress inetSocketAddress) {
         pool = new GenericObjectPool<>(new NettyClientFactory(inetSocketAddress));
@@ -21,8 +23,14 @@ public class NettyClientPool {
         return this.pool;
     }
 
-    private static ConcurrentHashMap<String, NettyClientPool> clientPoolMap = new ConcurrentHashMap<String, NettyClientPool>();
 
+    /**
+     * 根据ip信息获取服务器连接的连接池
+     *
+     * @param nodeVO
+     * @return
+     * @throws Exception
+     */
     public static GenericObjectPool<NettyClient> getNettyClientPool(NodeVO nodeVO)
             throws Exception {
 
@@ -36,10 +44,26 @@ public class NettyClientPool {
         return clientPool.getPool();
     }
 
+    public static void removeNettyClientPool(NodeVO nodeVO) {
+
+        NettyClientPool clientPool = clientPoolMap.get(nodeVO.getNodeStr());
+        if (clientPool != null) {
+            stop(clientPool);
+            clientPoolMap.remove(nodeVO.getNodeStr());
+        }
+    }
+
+    /**
+     * 连接关闭
+     */
     public static void stop() {
         for (Map.Entry<String, NettyClientPool> listEntry : clientPoolMap.entrySet()) {
-            NettyClientPool rpcClientHandlerList = listEntry.getValue();
-            rpcClientHandlerList.getPool().close();
+            NettyClientPool nettyClientPool = listEntry.getValue();
+            stop(nettyClientPool);
         }
+    }
+
+    public static void stop(NettyClientPool nettyClientPool) {
+        nettyClientPool.getPool().close();
     }
 }

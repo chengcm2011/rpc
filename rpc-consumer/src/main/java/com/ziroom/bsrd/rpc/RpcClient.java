@@ -77,6 +77,11 @@ public class RpcClient implements InitializingBean {
     }
 
     public static Object send(RpcRequest request) throws Exception {
+        return call(request).get();
+
+    }
+
+    public static RPCFuture call(RpcRequest request) throws Exception {
         NodeVO nodeVO = ServiceNodeManange.getInstance().chooseHandler(request.getClassName());
         GenericObjectPool<NettyClient> clientPool = NettyClientPool.getNettyClientPool(nodeVO);
 
@@ -90,7 +95,7 @@ public class RpcClient implements InitializingBean {
 
             clientPoolProxy.send(request);
             // future get
-            return rpcFuture.get();
+            return rpcFuture;
         } catch (Exception e) {
             throw e;
         } finally {

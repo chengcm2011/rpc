@@ -2,23 +2,18 @@ package com.ziroom.bsrd.rpc.zk;
 
 import com.ziroom.bsrd.rpc.RpcClient;
 import com.ziroom.bsrd.rpc.itf.IAsyncObjectProxy;
-import com.ziroom.bsrd.rpc.netty.ConnectManage;
 import com.ziroom.bsrd.rpc.netty.RPCFuture;
-import com.ziroom.bsrd.rpc.netty.RpcClientHandler;
 import com.ziroom.bsrd.rpc.vo.RpcRequest;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author chengys4
  *         2018-02-27 17:52
  **/
 public class ServiceProxy<T> implements InvocationHandler, IAsyncObjectProxy {
-
-    private ConcurrentHashMap<String, RPCFuture> pendingRPC = new ConcurrentHashMap<>();
 
     private Class<T> clazz;
 
@@ -51,32 +46,12 @@ public class ServiceProxy<T> implements InvocationHandler, IAsyncObjectProxy {
 
 
         return RpcClient.send(request);
-//        GenericObjectPool<NettyClient> clientPool = NettyClientPool.getNettyClientPool(nodeVO);
-//
-//        // client proxt
-//        NettyClient clientPoolProxy = null;
-//        try {
-//            RPCFuture rpcFuture = new RPCFuture(request);
-//            pendingRPC.put(request.getRequestId(), rpcFuture);
-//            // rpc invoke
-//            clientPoolProxy = clientPool.borrowObject();
-//
-//            clientPoolProxy.send(request);
-//            // future get
-//            return rpcFuture.get();
-//        } catch (Exception e) {
-//            throw e;
-//        } finally {
-//            clientPool.returnObject(clientPoolProxy);
-//        }
     }
 
     @Override
-    public RPCFuture call(String methodName, Object... args) {
-        RpcClientHandler handler = ConnectManage.getInstance().chooseHandler(this.clazz.getName());
+    public RPCFuture call(String methodName, Object... args) throws Exception {
         RpcRequest request = createRequest(this.clazz.getName(), methodName, args);
-        RPCFuture rpcFuture = handler.sendRequest(request);
-        return rpcFuture;
+        return RpcClient.call(request);
     }
 
     private RpcRequest createRequest(String className, String methodName, Object[] args) {

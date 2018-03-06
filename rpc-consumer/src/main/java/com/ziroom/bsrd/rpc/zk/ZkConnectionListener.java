@@ -1,7 +1,6 @@
 package com.ziroom.bsrd.rpc.zk;
 
 import com.ziroom.bsrd.log.ApplicationLogger;
-import com.ziroom.bsrd.rpc.netty.ConnectManage;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.framework.state.ConnectionStateListener;
@@ -40,9 +39,6 @@ public class ZkConnectionListener implements ConnectionStateListener {
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-            ApplicationLogger.info("connect service begin");
-            ConnectManage.getInstance().initServices(serviceNodes);
-            ApplicationLogger.info("connect service end");
         }
     }
 }

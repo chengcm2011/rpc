@@ -7,6 +7,11 @@ import java.net.InetSocketAddress;
  *         2018-03-01 16:46
  **/
 public class NodeVO {
+
+    public static final String SERVICE = "service";
+    public static final String NODE = "node";
+
+
     private String type;
     private String serviceName;
     private String nodeStr;
