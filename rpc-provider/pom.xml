@@ -20,7 +20,7 @@
     <dependencies>
         <dependency>
             <groupId>com.ziroom.bsrd</groupId>
-            <artifactId>rpc-common</artifactId>
+            <artifactId>rpc-registry</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>

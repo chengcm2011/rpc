@@ -13,9 +13,11 @@
     <version>1.0.0-SNAPSHOT</version>
     <modules>
         <module>rpc-common</module>
-        <module>rpc-admin</module>
+        <module>rpc-registry</module>
         <module>rpc-consumer</module>
         <module>rpc-provider</module>
+        <module>rpc-admin</module>
+        <module>rpc-admin-test</module>
         <module>rpc-test</module>
     </modules>
     <packaging>pom</packaging>
@@ -29,6 +31,11 @@
             <dependency>
                 <groupId>com.ziroom.bsrd</groupId>
                 <artifactId>rpc-common</artifactId>
+                <version>1.0.0-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.ziroom.bsrd</groupId>
+                <artifactId>rpc-registry</artifactId>
                 <version>1.0.0-SNAPSHOT</version>
             </dependency>
             <dependency>

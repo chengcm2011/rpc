@@ -1,10 +1,9 @@
 package com.ziroom.bsrd.rpc;
 
 import com.ziroom.bsrd.rpc.annotation.RpcService;
-import com.ziroom.bsrd.rpc.decoder.HessianSerializer;
-import com.ziroom.bsrd.rpc.itf.IServer;
-import com.ziroom.bsrd.rpc.netty.NettyServer;
-import com.ziroom.bsrd.rpc.registry.RegistryCentry;
+import com.ziroom.bsrd.rpc.registry.ServiceRegistry;
+import com.ziroom.bsrd.rpc.serializer.HessianSerializer;
+import com.ziroom.bsrd.rpc.transport.NettyServer;
 import com.ziroom.bsrd.rpc.vo.RpcRequest;
 import com.ziroom.bsrd.rpc.vo.RpcResponse;
 import org.apache.commons.collections4.MapUtils;
@@ -30,14 +29,14 @@ public class RpcServer implements ApplicationContextAware, InitializingBean, Dis
 
     private static Map<String, Object> servicesMap = new HashMap<>();
     private static ThreadPoolExecutor threadPoolExecutor;
-    private IServer server;
+    private NettyServer server;
     private int port = 7080;
 
-    private RegistryCentry registryCentry;
+    private ServiceRegistry serviceRegistry;
 
-    public RpcServer(RegistryCentry registryCentry) {
+    public RpcServer(ServiceRegistry serviceRegistry) {
 
-        this.registryCentry = registryCentry;
+        this.serviceRegistry = serviceRegistry;
     }
 
 
@@ -91,7 +90,7 @@ public class RpcServer implements ApplicationContextAware, InitializingBean, Dis
     public void afterPropertiesSet() throws Exception {
         server = NettyServer.class.newInstance();
         server.start(port, new HessianSerializer());
-        registryCentry.registerServices(port, servicesMap.keySet());
+        serviceRegistry.registerServices(port, servicesMap.keySet());
 
     }
 
