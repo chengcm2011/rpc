@@ -4,7 +4,6 @@ server:
 ###################  任务计划配置  ###################
 zookeeper:
     serverLists: 10.16.37.112:3181
-    namespace: weixiao
     rpcnamespace: rpctest
 ###################  spring配置  ###################
 spring:

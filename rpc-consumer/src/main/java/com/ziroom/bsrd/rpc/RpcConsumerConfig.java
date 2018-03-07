@@ -23,7 +23,7 @@ public class RpcConsumerConfig {
         if (StringUtils.isBlank(serverLists)) {
 
         }
-        String namespace = env.getProperty("zookeeper.namespace");
+        String namespace = env.getProperty("zookeeper.rpcnamespace");
         if (StringUtils.isBlank(namespace)) {
             namespace = "rpc";
         }
