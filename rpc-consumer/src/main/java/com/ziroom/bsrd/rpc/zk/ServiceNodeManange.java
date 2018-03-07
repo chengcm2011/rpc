@@ -1,6 +1,7 @@
 package com.ziroom.bsrd.rpc.zk;
 
 
+import com.ziroom.bsrd.basic.Predef;
 import com.ziroom.bsrd.log.ApplicationLogger;
 import com.ziroom.bsrd.rpc.client.NettyClientPool;
 import com.ziroom.bsrd.rpc.vo.NodeVO;
@@ -48,10 +49,13 @@ public class ServiceNodeManange {
      * @return
      */
     public NodeVO chooseHandler(String serviceName) {
-        List<NodeVO> handlers = serviceNodes.get(serviceName);
-        int size = handlers.size();
+        List<NodeVO> nodeVOList = serviceNodes.get(serviceName);
+        if (Predef.size(nodeVOList) <= 0) {
+            throw new RuntimeException(" not find serviceName node");
+        }
+        int size = nodeVOList.size();
         int index = (roundRobin.getAndAdd(1) + size) % size;
-        NodeVO selectNode = handlers.get(index);
+        NodeVO selectNode = nodeVOList.get(index);
         ApplicationLogger.info("service={} select={}", serviceName, selectNode.getNodeStr());
         return selectNode;
     }

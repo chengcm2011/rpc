@@ -1,19 +1,14 @@
 package com.ziroom.bsrd.rpc.netty;
 
 import com.ziroom.bsrd.log.ApplicationLogger;
-import com.ziroom.bsrd.rpc.RpcClient;
-import com.ziroom.bsrd.rpc.itf.AsyncRPCCallback;
 import com.ziroom.bsrd.rpc.vo.RpcRequest;
 import com.ziroom.bsrd.rpc.vo.RpcResponse;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.AbstractQueuedSynchronizer;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class RPCFuture implements Future<Object> {
 
@@ -22,10 +17,7 @@ public class RPCFuture implements Future<Object> {
     private RpcResponse response;
     private long startTime;
 
-    private long responseTimeThreshold = 5000;
-
-    private List<AsyncRPCCallback> pendingCallbacks = new ArrayList<>();
-    private ReentrantLock lock = new ReentrantLock();
+    private long responseTimeThreshold = 6000;
 
     public RPCFuture(RpcRequest request) {
         this.sync = new Sync();
@@ -77,52 +69,12 @@ public class RPCFuture implements Future<Object> {
     public void done(RpcResponse reponse) {
         this.response = reponse;
         sync.release(1);
-        invokeCallbacks();
         // Threshold
         long responseTime = System.currentTimeMillis() - startTime;
         if (responseTime > this.responseTimeThreshold) {
             //TODO 记录请求时间
             ApplicationLogger.info("Service response time is too slow. Request id = " + reponse.getRequestId() + ". Response Time = " + responseTime + "ms");
         }
-    }
-
-    private void invokeCallbacks() {
-        lock.lock();
-        try {
-            for (final AsyncRPCCallback callback : pendingCallbacks) {
-                runCallback(callback);
-            }
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    public RPCFuture addCallback(AsyncRPCCallback callback) {
-        lock.lock();
-        try {
-            if (isDone()) {
-                runCallback(callback);
-            } else {
-                this.pendingCallbacks.add(callback);
-            }
-        } finally {
-            lock.unlock();
-        }
-        return this;
-    }
-
-    private void runCallback(final AsyncRPCCallback callback) {
-        final RpcResponse res = this.response;
-        RpcClient.submit(new Runnable() {
-            @Override
-            public void run() {
-                if (!res.isError()) {
-                    callback.success(res.getResult());
-                } else {
-                    callback.fail(new RuntimeException("Response error", new Throwable(res.getError())));
-                }
-            }
-        });
     }
 
     static class Sync extends AbstractQueuedSynchronizer {
