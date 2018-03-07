@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
  * @author chengys4
  *         2018-02-27 17:50
  **/
+@Deprecated
 public class RpcClient implements InitializingBean {
 
     private static ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(16, 16, 600L, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(65536));
@@ -36,7 +37,7 @@ public class RpcClient implements InitializingBean {
         this.serviceDiscovery = serviceDiscovery;
     }
 
-    public static <T> T create(Class<T> interfaceClass) {
+    public <T> T create(Class<T> interfaceClass) {
         return (T) Proxy.newProxyInstance(
                 interfaceClass.getClassLoader(),
                 new Class<?>[]{interfaceClass},

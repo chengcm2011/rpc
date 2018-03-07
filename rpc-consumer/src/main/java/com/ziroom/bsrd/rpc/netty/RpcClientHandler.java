@@ -1,7 +1,7 @@
 package com.ziroom.bsrd.rpc.netty;
 
 import com.ziroom.bsrd.log.ApplicationLogger;
-import com.ziroom.bsrd.rpc.RpcClient;
+import com.ziroom.bsrd.rpc.RpcClientProxy;
 import com.ziroom.bsrd.rpc.vo.RpcResponse;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -16,9 +16,9 @@ public class RpcClientHandler extends SimpleChannelInboundHandler<RpcResponse> {
 
         ApplicationLogger.info("receive response:" + response.toString());
         String requestId = response.getRequestId();
-        RPCFuture rpcFuture = RpcClient.pendingRPC.get(requestId);
+        RPCFuture rpcFuture = RpcClientProxy.pendingRPC.get(requestId);
         if (rpcFuture != null) {
-            RpcClient.pendingRPC.remove(requestId);
+            RpcClientProxy.pendingRPC.remove(requestId);
             rpcFuture.done(response);
         }
     }

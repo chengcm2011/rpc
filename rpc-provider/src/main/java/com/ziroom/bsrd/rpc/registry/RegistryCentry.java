@@ -1,4 +1,4 @@
-package com.ziroom.bsrd.rpc;
+package com.ziroom.bsrd.rpc.registry;
 
 import com.ziroom.bsrd.basic.Predef;
 import com.ziroom.bsrd.log.ApplicationLogger;
@@ -22,11 +22,19 @@ import java.util.Set;
  **/
 public class RegistryCentry {
 
-    public static final String connectionInfo = "10.16.37.112:3181";
-    public static final String namespace = "rpc";
+    private String registerAddress = "10.16.37.112:3181";
+    private String namespace = "rpc";
 
+    public RegistryCentry() {
 
-    public static void registerServices(int port, Set<String> servicesItfList) throws Exception {
+    }
+
+    public RegistryCentry(String registerAddress, String namespace) {
+        this.registerAddress = registerAddress;
+        this.namespace = namespace;
+    }
+
+    public void registerServices(int port, Set<String> servicesItfList) throws Exception {
 
         if (port < 0 || Predef.size(servicesItfList) <= 0) {
             return;
@@ -37,7 +45,7 @@ public class RegistryCentry {
         RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
         CuratorFramework client =
                 CuratorFrameworkFactory.builder()
-                        .connectString(connectionInfo)
+                        .connectString(registerAddress)
                         .sessionTimeoutMs(5000)
                         .connectionTimeoutMs(5000)
                         .retryPolicy(retryPolicy)

@@ -1,4 +1,4 @@
-package com.ziroom.bsrd.client;
+package com.ziroom.bsrd.rpc.test;
 
 import java.util.List;
 

@@ -61,4 +61,5 @@ public class NettyClient {
     public void send(RpcRequest request) throws Exception {
         this.channel.writeAndFlush(request).sync();
     }
+
 }

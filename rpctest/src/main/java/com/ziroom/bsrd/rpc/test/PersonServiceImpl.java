@@ -1,8 +1,6 @@
-package com.ziroom.bsrd.rpc.server;
+package com.ziroom.bsrd.rpc.test;
 
 
-import com.ziroom.bsrd.client.IPersonService;
-import com.ziroom.bsrd.client.Person;
 import com.ziroom.bsrd.rpc.annotation.RpcService;
 
 import java.util.ArrayList;

@@ -7,14 +7,11 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>rpctest</artifactId>
+    <artifactId>rpc-test-provider</artifactId>
     <version>1.0.0-SNAPSHOT</version>
-    <modules>
-        <module>../rpc-test-api</module>
-    </modules>
-    <packaging>pom</packaging>
+    <packaging>jar</packaging>
 
-    <name>rpctest</name>
+    <name>rpc-test-provider</name>
     <url>http://maven.apache.org</url>
 
     <properties>
@@ -23,31 +20,14 @@
 
     <dependencies>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>3.8.1</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-test</artifactId>
-            <version>3.2.12.RELEASE</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>com.ziroom.bsrd</groupId>
             <artifactId>rpc-provider</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.ziroom.bsrd</groupId>
-            <artifactId>rpc-consumer</artifactId>
+            <artifactId>rpc-test-api</artifactId>
             <version>1.0.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>3.6</version>
         </dependency>
     </dependencies>
 </project>

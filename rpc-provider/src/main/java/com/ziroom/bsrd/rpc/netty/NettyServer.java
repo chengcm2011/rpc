@@ -2,7 +2,6 @@ package com.ziroom.bsrd.rpc.netty;
 
 
 import com.ziroom.bsrd.log.ApplicationLogger;
-import com.ziroom.bsrd.rpc.NettyServerHandler;
 import com.ziroom.bsrd.rpc.decoder.NettyDecoder;
 import com.ziroom.bsrd.rpc.decoder.NettyEncoder;
 import com.ziroom.bsrd.rpc.decoder.Serializer;

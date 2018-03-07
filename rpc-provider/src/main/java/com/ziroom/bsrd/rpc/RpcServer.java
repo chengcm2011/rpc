@@ -4,6 +4,7 @@ import com.ziroom.bsrd.rpc.annotation.RpcService;
 import com.ziroom.bsrd.rpc.decoder.HessianSerializer;
 import com.ziroom.bsrd.rpc.itf.IServer;
 import com.ziroom.bsrd.rpc.netty.NettyServer;
+import com.ziroom.bsrd.rpc.registry.RegistryCentry;
 import com.ziroom.bsrd.rpc.vo.RpcRequest;
 import com.ziroom.bsrd.rpc.vo.RpcResponse;
 import org.apache.commons.collections4.MapUtils;
@@ -31,6 +32,13 @@ public class RpcServer implements ApplicationContextAware, InitializingBean, Dis
     private static ThreadPoolExecutor threadPoolExecutor;
     private IServer server;
     private int port = 7080;
+
+    private RegistryCentry registryCentry;
+
+    public RpcServer(RegistryCentry registryCentry) {
+
+        this.registryCentry = registryCentry;
+    }
 
 
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
@@ -83,8 +91,8 @@ public class RpcServer implements ApplicationContextAware, InitializingBean, Dis
     public void afterPropertiesSet() throws Exception {
         server = NettyServer.class.newInstance();
         server.start(port, new HessianSerializer());
+        registryCentry.registerServices(port, servicesMap.keySet());
 
-        RegistryCentry.registerServices(port, servicesMap.keySet());
     }
 
 
