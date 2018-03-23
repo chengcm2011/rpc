@@ -15,11 +15,11 @@ public class ServiceDiscoveryInit {
 
     @Bean
     public ServiceDiscovery serviceDiscovery() {
-        String serverLists = env.getProperty("zookeeper.serverLists");
+        String serverLists = env.getProperty("rpc.zookeeper.serverLists");
         if (StringUtils.isBlank(serverLists)) {
 
         }
-        String namespace = env.getProperty("zookeeper.rpcnamespace");
+        String namespace = env.getProperty("rpc.zookeeper.rpcnamespace");
         if (StringUtils.isBlank(namespace)) {
             namespace = "rpc";
         }

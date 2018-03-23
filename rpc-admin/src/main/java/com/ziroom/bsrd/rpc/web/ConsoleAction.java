@@ -38,7 +38,7 @@ public class ConsoleAction extends CommonAction {
         Map<String, List<NodeVO>> map = ServiceNodeManage.getServiceNodes();
 
         List<TreeNodeVO> nodeVOs = new ArrayList<>();
-        int id = 10;
+        int id = 10000;
         for (Map.Entry<String, List<NodeVO>> entry : map.entrySet()) {
             TreeNodeVO treeNodeVO = new TreeNodeVO();
             treeNodeVO.setNodeId(id);
@@ -53,7 +53,7 @@ public class ConsoleAction extends CommonAction {
     }
 
     private List<TreeNodeVO> initChildren(List<TreeNodeVO> nodeVOs, TreeNodeVO treeNodeVO, List<NodeVO> value) {
-        int pi = 10000;
+        int pi = 50000;
         for (NodeVO nodeVO : value) {
             TreeNodeVO childtreeNodeVO = new TreeNodeVO();
             childtreeNodeVO.setNodeId(pi);

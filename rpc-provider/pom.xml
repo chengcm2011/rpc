@@ -8,6 +8,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>rpc-provider</artifactId>
+    <version>${rpc.version}</version>
     <packaging>jar</packaging>
 
     <name>rpc-provider</name>
