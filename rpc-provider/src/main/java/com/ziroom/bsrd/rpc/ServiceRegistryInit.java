@@ -19,11 +19,11 @@ public class ServiceRegistryInit {
 
     @Bean
     public ServiceRegistry serviceRegistry() {
-        String serverLists = env.getProperty("zookeeper.serverLists");
+        String serverLists = env.getProperty("rpc.zookeeper.serverLists");
         if (StringUtils.isBlank(serverLists)) {
-
+            throw new IllegalArgumentException("rpc.zookeeper.serverLists not find ");
         }
-        String rpcnamespace = env.getProperty("zookeeper.rpcnamespace");
+        String rpcnamespace = env.getProperty("rpc.zookeeper.rpcnamespace");
         if (StringUtils.isBlank(rpcnamespace)) {
             rpcnamespace = "rpc";
         }

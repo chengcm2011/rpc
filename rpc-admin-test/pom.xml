@@ -20,10 +20,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>3.8.1</version>
-            <scope>test</scope>
+            <groupId>com.ziroom.bsrd</groupId>
+            <artifactId>rpc-admin</artifactId>
         </dependency>
     </dependencies>
 </project>

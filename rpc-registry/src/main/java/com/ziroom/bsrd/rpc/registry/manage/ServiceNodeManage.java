@@ -144,4 +144,8 @@ public class ServiceNodeManage {
     public EventLoopGroup getEventLoopGroup() {
         return eventLoopGroup;
     }
+
+    public static Map<String, List<NodeVO>> getServiceNodes() {
+        return serviceNodes;
+    }
 }

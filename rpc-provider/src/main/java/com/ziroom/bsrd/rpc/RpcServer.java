@@ -30,7 +30,8 @@ public class RpcServer implements ApplicationContextAware, InitializingBean, Dis
     private static Map<String, Object> servicesMap = new HashMap<>();
     private static ThreadPoolExecutor threadPoolExecutor;
     private NettyServer server;
-    private int port = 7080;
+
+    private int port;
 
     private ServiceRegistry serviceRegistry;
 
@@ -106,4 +107,11 @@ public class RpcServer implements ApplicationContextAware, InitializingBean, Dis
         threadPoolExecutor.submit(task);
     }
 
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
 }
