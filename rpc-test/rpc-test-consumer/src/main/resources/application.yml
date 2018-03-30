@@ -34,11 +34,6 @@ spring:
 domain: http://weixiao.t.ziroom.com/
 spring:
   profiles: TEST
-  datasource:
-      domian: 10.16.16.13:3306
-      databaseName: weixiao
-      username: weixiao_user
-      password: weixiao_user
   redis:
         host: tech.t.ziroom.com
         pool:
