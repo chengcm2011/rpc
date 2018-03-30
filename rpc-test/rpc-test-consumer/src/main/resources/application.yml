@@ -1,10 +1,6 @@
 ###################  项目启动端口  ###################
 server:
   port: 82
-###################  任务计划配置  ###################
-zookeeper:
-    serverLists: 10.16.37.112:3181
-    rpcnamespace: rpctest
 ###################  spring配置  ###################
 rpc:
   server:
@@ -31,16 +27,6 @@ spring:
     expose-session-attributes: true
     request-context-attribute: request
     prefer-file-system-access: false
-gensee :
-    organiser:
-      id: 45346731
-      loginName: zrwxorganiser
-      password: h9egYiWC5Z
-      url: http://zrw.gensee.com/integration/site
-    admin:
-      id: dsd
-      loginName: zrwxadmin
-      password: h9egYiWC5Z
 ---
 ##########################################################
 ###################  测试环境的profile  ###################
@@ -51,39 +37,17 @@ spring:
   datasource:
       domian: 10.16.16.13:3306
       databaseName: weixiao
-      username: bsrd_weixiao_user
-      password: ziroomdb
-  redis :
-      cluster:
-          nodes: 10.16.34.125:6392,10.16.34.125:6393,10.16.34.125:6394
-      master:
-          name: sentinel-10.16.34.125-6390
-      pool:
+      username: weixiao_user
+      password: weixiao_user
+  redis:
+        host: tech.t.ziroom.com
+        pool:
             max-idle: 100
             min-idle: 1
             max-total: 1024
             max-wait: 1000
-  cas:
-      url: http://cas.ziroom.com/CAS
-techplatform:
-  storage:
-      url: http://storage.t.ziroom.com
-      storageaccessurl: http://172.16.13.222
-      storagefileaccessurl: http://10.16.34.48:8080
-  mail:
-        url: http://message.t.ziroom.com
-        token: DPSK6R4eRem98jyydaSomA
-  sms:
-        url: http://message.t.ziroom.com
-        token: YRQ4NqJ5Ra2nYuMGRmcSlQ
-bsrd:
-    ehr:
-        url: http://ehrnew.t.ziroom.com 
-    cms:
-        url: http://contentful.inside.ziroom.com
-    push:
-        url: http://api.push.t.ziroom.com/push
-        gj_token: 151bb942d4214102b0d99513713805b5
-        pz_token: a66b9021e4ab48bcbf94119d81e6e2b8
+        sentinel:
+            master: sentinel-10.16.34.125-6390
+            nodes: 10.16.34.125:6392,10.16.34.125:6393,10.16.34.125:6394
 
 ---
